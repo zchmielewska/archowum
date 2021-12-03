@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" href="{% static "css/styles.css" %}">
+    <title>Archowum | archiwum OWU</title>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="navcontent">
+            <div><a href="/">ARCH<strong>OWU</strong>M</a></div>
+            <div class="push"><a href="{% url "add_document" %}">Dodaj dokument</a></div>
+            <div><a href="{% url "manage" %}">Zarządzaj</a></div>
+        </div>
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

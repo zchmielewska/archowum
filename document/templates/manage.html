@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <h3>Zarządzaj produktami</h3>
+    <div class="brick">
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Model</th>
+                <th>Nazwa</th>
+            </tr>
+            {% for product in products %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ product.model }}</td>
+                <td>{{ product.name }}</td>
+                <td>edytuj</td>
+                <td>usuń</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+
+    <h3>Zarządzaj kategoriami dokumentów</h3>
+    <div class="brick">
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Nazwa</th>
+            </tr>
+            {% for category in categories %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ category.name }}</td>
+                <td>edytuj</td>
+                <td>usuń</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+
+
+
+{% endblock %}
