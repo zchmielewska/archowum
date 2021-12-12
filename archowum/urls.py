@@ -24,6 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.Main.as_view(), name="main"),
     path('document/add/', views.AddDocument.as_view(), name="add_document"),
+    path('product/add/', views.AddProduct.as_view(), name="add_product"),
+    path('category/add/', views.AddCategory.as_view(), name="add_category"),
     path('manage/', views.Manage.as_view(), name="manage"),
 ]
 

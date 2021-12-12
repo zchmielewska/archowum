@@ -3,11 +3,20 @@
 
     <h3>Zarządzaj produktami</h3>
     <div class="brick">
-        <table>
+        <table class="manage-tbl">
+            <colgroup>
+                <col style="width: auto;">
+                <col style="width: auto;">
+                <col style="width: 100%;">
+                <col style="width: auto;">
+                <col style="width: auto;">
+            </colgroup>
             <tr>
                 <th>#</th>
                 <th>Model</th>
                 <th>Nazwa</th>
+                <th></th>
+                <th></th>
             </tr>
             {% for product in products %}
             <tr>
@@ -19,15 +28,28 @@
             </tr>
             {% endfor %}
         </table>
+
+        <div class="center">
+            <a href="{% url "add_product" %}" class="green-button">Dodaj nowy produkt</a>
+        </div>
     </div>
 
 
     <h3>Zarządzaj kategoriami dokumentów</h3>
+
     <div class="brick">
-        <table>
+        <table class="manage-tbl">
+            <colgroup>
+                <col style="width: auto;">
+                <col style="width: 100%;">
+                <col style="width: auto;">
+                <col style="width: auto;">
+            </colgroup>
             <tr>
                 <th>#</th>
                 <th>Nazwa</th>
+                <th></th>
+                <th></th>
             </tr>
             {% for category in categories %}
             <tr>
@@ -38,9 +60,10 @@
             </tr>
             {% endfor %}
         </table>
+
+        <div class="center">
+            <a href="{% url "add_category" %}" class="green-button">Dodaj nową kategorię dokumentów</a>
+        </div>
     </div>
-
-
-
 
 {% endblock %}

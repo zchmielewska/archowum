@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h3>Dodaj dokument</h3>
+    <h3>Dodaj produkt</h3>
     <div class="brick">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post">
             {% csrf_token %}
 
             {{ form.as_p }}
 
-            <button type="submit">Dodaj dokument</button>
+            <button type="submit">Dodaj produkt</button>
         </form>
     </div>
 
