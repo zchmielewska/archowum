@@ -1,90 +1,90 @@
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import FormView, CreateView, UpdateView, DeleteView
+from django.views.generic import FormView, CreateView, UpdateView, DeleteView, DetailView
 
 from document import models
 from document import forms
 
 
-class Main(View):
+class MainView(LoginRequiredMixin, View):
     def get(self, request):
         documents = models.Document.objects.all().order_by("-id")[:10]
         return render(request, "main.html", {"documents": documents})
 
 
-class Manage(View):
+class ManageView(LoginRequiredMixin, View):
     def get(self, request):
         categories = models.Category.objects.all().order_by("id")
         products = models.Product.objects.all().order_by("id")
         return render(request, "manage.html", {"categories": categories, "products": products})
 
 
-class AddDocument(View):
+class AddDocumentView(LoginRequiredMixin, View):
     def get(self, request):
         form = forms.AddDocumentForm
         return render(request, "document_form.html", {"form": form})
 
     def post(self, request):
         form = forms.AddDocumentForm(request.POST, request.FILES)
-        print("form:", form)
         if form.is_valid():
             product = form.cleaned_data.get("product")
             category = form.cleaned_data.get("category")
             validity_start = form.cleaned_data.get("validity_start")
             file = form.cleaned_data.get("file")
-            fss = FileSystemStorage()
-            fss.save(file.name, file)
             models.Document.objects.create(
                 product=product,
                 category=category,
                 validity_start=validity_start,
                 file=file,
+                created_by=request.user,
             )
             return redirect("main")
+        return render(request, "document_form.html", {"form": form})
 
 
-class AddProduct(CreateView):
+class AddProductView(LoginRequiredMixin, CreateView):
     model = models.Product
     fields = "__all__"
     success_url = reverse_lazy("manage")
 
 
-class AddCategory(CreateView):
+class AddCategoryView(LoginRequiredMixin, CreateView):
     model = models.Category
     fields = "__all__"
     success_url = reverse_lazy("manage")
 
 
-class EditProduct(UpdateView):
+class EditProductView(LoginRequiredMixin, UpdateView):
     model = models.Product
     fields = "__all__"
     template_name_suffix = "_update_form"
     success_url = reverse_lazy("manage")
 
 
-class EditCategory(UpdateView):
+class EditCategoryView(LoginRequiredMixin, UpdateView):
     model = models.Category
     fields = "__all__"
     template_name_suffix = "_update_form"
     success_url = reverse_lazy("manage")
 
 
-class DeleteProduct(DeleteView):
+class DeleteProductView(DeleteView):
     model = models.Product
     success_url = reverse_lazy("manage")
 
 
-class DeleteCategory(DeleteView):
+class DeleteCategoryView(DeleteView):
     model = models.Category
     success_url = reverse_lazy("manage")
 
 
-class Register(View):
+class RegisterView(View):
     """Form to create a new account."""
     def get(self, request):
         form = forms.RegisterForm()
@@ -108,7 +108,7 @@ class Register(View):
             return render(request, "register.html", {"form": form})
 
 
-class Login(View):
+class LoginView(View):
     """Form to log in."""
     def get(self, request):
         form = forms.LoginForm()
@@ -130,9 +130,13 @@ class Login(View):
         return render(request, "login.html", {"form": form})
 
 
-class Logout(View):
+class LogoutView(View):
     """Form to log out."""
     def get(self, request):
         logout(request)
         return redirect("main")
+
+
+class DocumentDetailView(DetailView):
+    model = models.Document
 

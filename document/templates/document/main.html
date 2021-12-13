@@ -29,6 +29,9 @@
                     <td>{{ document.file }}</td>
                 </tr>
             </table>
+            <a href="{% url "document_detail" document.id %}">zobacz więcej</a>
         </div>
+    {% empty %}
+        <p>Jeszcze nie ma żadnego dokumentu.</p>
     {% endfor %}
 {% endblock %}

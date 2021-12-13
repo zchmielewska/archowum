@@ -15,24 +15,6 @@ class AddDocumentForm(forms.Form):
     validity_start = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), label="Ważny od")
 
 
-class AddProductForm(forms.ModelForm):
-    class Meta:
-        model = models.Product
-        fields = "__all__"
-        labels = {
-            "model": "Model przepływów pieniężnych  ",
-            "name": "Nazwa produktu",
-            "description": "Opis produktu",
-        }
-
-
-class AddCategoryForm(forms.ModelForm):
-    class Meta:
-        model = models.Category
-        fields = "__all__"
-        labels = {"name": "Nazwa kategorii produktów"}
-
-
 class RegisterForm(forms.Form):
     username = forms.CharField(max_length=36, label="Nazwa użytkownika")
     password = forms.CharField(label="Hasło", widget=forms.PasswordInput)

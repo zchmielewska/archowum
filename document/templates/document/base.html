@@ -7,22 +7,27 @@
     <title>Archowum | archiwum OWU</title>
 </head>
 <body>
-
-    <div class="navbar">
-        <div class="navcontent">
-            <div><a href="/">ARCH<strong>OWU</strong>M</a></div>
-            <div class="push"><a href="{% url "add_document" %}">Dodaj dokument</a></div>
-            <div><a href="{% url "manage" %}">Zarządzaj</a></div>
+    <div class="wrapper">
+        <div class="navbar">
+            <div class="navcontent">
+                <div><a href="/">ARCH<strong>OWU</strong>M</a></div>
+                <div class="push"><a href="{% url "add_document" %}">Dodaj dokument</a></div>
+                <div><a href="{% url "manage" %}">Zarządzaj</a></div>
+            </div>
         </div>
-    </div>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-        <div class="push"></div>
+        <div class="container">
+            {% block content %}{% endblock %}
+            <div class="push"></div>
+        </div>
+
     </div>
     <div class="footer">
         <div class="footer-content">
-            aaa_
+            {% if request.user.username %}
+                zalogowany użytkownik: <strong>{{ request.user.username }}</strong>
+                <a href="{% url "logout" %}" class="link" style="float: right;">wyloguj się</a>
+            {% endif %}
         </div>
     </div>
 </body>

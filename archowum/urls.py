@@ -22,18 +22,19 @@ from document import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.Main.as_view(), name="main"),
-    path('dokument/dodaj/', views.AddDocument.as_view(), name="add_document"),
-    path('produkt/dodaj/', views.AddProduct.as_view(), name="add_product"),
-    path('kategoria/dodaj/', views.AddCategory.as_view(), name="add_category"),
-    path('produkt/edytuj/<pk>', views.EditProduct.as_view(), name="edit_product"),
-    path('kategoria/edytuj/<pk>', views.EditCategory.as_view(), name="edit_category"),
-    path('produkt/usun/<pk>', views.DeleteProduct.as_view(), name="delete_product"),
-    path('kategoria/usun/<pk>', views.DeleteCategory.as_view(), name="delete_category"),
-    path('zarzadzaj/', views.Manage.as_view(), name="manage"),
-    path('zarejestruj/', views.Register.as_view(), name="register"),
-    path('zaloguj/', views.Login.as_view(), name="login"),
-    path('wyloguj/', views.Logout.as_view(), name="logout"),
+    path('', views.MainView.as_view(), name="main"),
+    path('dokument/dodaj/', views.AddDocumentView.as_view(), name="add_document"),
+    path('produkt/dodaj/', views.AddProductView.as_view(), name="add_product"),
+    path('kategoria/dodaj/', views.AddCategoryView.as_view(), name="add_category"),
+    path('produkt/edytuj/<pk>', views.EditProductView.as_view(), name="edit_product"),
+    path('kategoria/edytuj/<pk>', views.EditCategoryView.as_view(), name="edit_category"),
+    path('produkt/usun/<pk>', views.DeleteProductView.as_view(), name="delete_product"),
+    path('kategoria/usun/<pk>', views.DeleteCategoryView.as_view(), name="delete_category"),
+    path('dokument/<pk>/', views.DocumentDetailView.as_view(), name="document_detail"),
+    path('zarzadzaj/', views.ManageView.as_view(), name="manage"),
+    path('zarejestruj/', views.RegisterView.as_view(), name="register"),
+    path('zaloguj/', views.LoginView.as_view(), name="login"),
+    path('wyloguj/', views.LogoutView.as_view(), name="logout"),
 ]
 
 if settings.DEBUG:

@@ -3,7 +3,13 @@
 a { color: inherit; text-decoration: none; }
 
 /* Main page */
+html {
+    height: 100%;
+    margin: 0;
+}
+
 body {
+  height: 100%;
   margin: 0;
   font-family: 'Ubuntu', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
   background-color: #eee;
@@ -44,17 +50,25 @@ body {
   flex-direction: column;
 }
 
+/* wrapper and push are used to make footer sticky */
+.wrapper {
+    min-height: 100%;
+    margin-bottom: -48px;
+}
+
 .footer, .push {
     height: 48px;
 }
 
 .footer {
-    background-color: #d5d6da;
+  background-color: #d5d6da;
 }
 
 .footer-content {
-    width: 70%;
-    margin: 0 auto;
+  width: 70%;
+  margin: 0 auto;
+  padding: 12px;
+  font-size: 0.9em;
 }
 
 /* Content */
