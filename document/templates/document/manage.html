@@ -23,14 +23,14 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ product.model }}</td>
                 <td>{{ product.name }}</td>
-                <td>edytuj</td>
-                <td>usuń</td>
+                <td><a href="{% url "edit_product" product.id %}" class="link">edytuj</a></td>
+                <td><a href="{% url "delete_product" product.id %}" class="link">usuń</a></td>
             </tr>
             {% endfor %}
         </table>
 
         <div class="center">
-            <a href="{% url "add_product" %}" class="green-button">Dodaj nowy produkt</a>
+            <a href="{% url "add_product" %}" class="button green-button">Dodaj nowy produkt</a>
         </div>
     </div>
 
@@ -55,14 +55,14 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ category.name }}</td>
-                <td>edytuj</td>
-                <td>usuń</td>
+                <td><a href="{% url "edit_category" category.id %}" class="link">edytuj</a></td>
+                <td><a href="{% url "delete_category" category.id %}" class="link">usuń</a></td>
             </tr>
             {% endfor %}
         </table>
 
         <div class="center">
-            <a href="{% url "add_category" %}" class="green-button">Dodaj nową kategorię dokumentów</a>
+            <a href="{% url "add_category" %}" class="button green-button">Dodaj nową kategorię dokumentów</a>
         </div>
     </div>
 

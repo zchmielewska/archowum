@@ -8,25 +8,10 @@ class DateInput(forms.DateInput):
     format = '%Y-%m-%d'
 
 
-class AddDocumentFormOld(forms.ModelForm):
-    class Meta:
-        model = models.Document
-        fields = ("file", "product", "category", "validity_start")
-        labels = {
-            "product": "Produkt",
-            "category": "Kategoria dokumentu",
-            "file": "Plik",
-            "validity_start": "Ważny od",
-        }
-        widgets = {
-            'validity_start': DateInput()
-        }
-
-
 class AddDocumentForm(forms.Form):
-    file = forms.FileField(label="Plik")
     product = forms.ModelChoiceField(queryset=models.Product.objects.all(), label="Produkt")
     category = forms.ModelChoiceField(queryset=models.Category.objects.all(), label="Kategoria dokumentu")
+    file = forms.FileField(label="Plik")
     validity_start = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), label="Ważny od")
 
 
@@ -46,3 +31,14 @@ class AddCategoryForm(forms.ModelForm):
         model = models.Category
         fields = "__all__"
         labels = {"name": "Nazwa kategorii produktów"}
+
+
+class RegisterForm(forms.Form):
+    username = forms.CharField(max_length=36, label="Nazwa użytkownika")
+    password = forms.CharField(label="Hasło", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Powtórz hasło", widget=forms.PasswordInput)
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=36, label="Nazwa użytkownika")
+    password = forms.CharField(label="Hasło", widget=forms.PasswordInput)

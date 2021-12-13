@@ -2,16 +2,15 @@ from django.db import models
 
 
 class Product(models.Model):
-    model = models.CharField(max_length=30)
-    name = models.CharField(max_length=100)
-    description = models.CharField(max_length=1000, null=True)
+    model = models.CharField(max_length=30, verbose_name="model przepływów pieniężnych")
+    name = models.CharField(max_length=100, verbose_name="nazwa")
 
     def __str__(self):
         return f"{self.model} - {self.name}"
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, verbose_name="nazwa")
 
     def __str__(self):
         return self.name

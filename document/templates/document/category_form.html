@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h3>Dodaj produkt</h3>
+    <h3>Dodaj kategorię dokumentów</h3>
     <div class="brick">
         <form method="post">
             {% csrf_token %}
 
             {{ form.as_p }}
 
-            <button type="submit">Dodaj produkt</button>
+            <div class="center">
+                <button type="submit" class="button green-button">Utwórz kategorię</button>
+            </div>
         </form>
     </div>
 
