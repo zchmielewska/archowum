@@ -118,6 +118,8 @@ input[type=text], input[type=password] {
 label {
   font-size: 0.9em;
   color: #666;
+  width: 100%;
+  display: inline-block;
 }
 
 .helptext, form > ul {
@@ -181,6 +183,15 @@ form > ul.errorlist {
 
 .red-button:hover {
   background-color: rgba(220, 53, 69, 0.2);
+}
+
+.gray-button {
+  border-color: rgba(66, 66, 66, 0.75);
+  color: rgba(66, 66, 66, 0.75);
+}
+
+.gray-button:hover {
+  background-color: rgba(66, 66, 66, 0.2);
 }
 
 .link {

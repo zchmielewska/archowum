@@ -28,6 +28,7 @@ urlpatterns = [
     path('category/add/', views.AddCategoryView.as_view(), name="add_category"),
     path('product/edit/<pk>', views.EditProductView.as_view(), name="edit_product"),
     path('category/edit/<pk>', views.EditCategoryView.as_view(), name="edit_category"),
+    path('document/edit/<pk>', views.EditDocumentView.as_view(), name="edit_document"),
     path('product/delete/<pk>', views.DeleteProductView.as_view(), name="delete_product"),
     path('category/delete/<pk>', views.DeleteCategoryView.as_view(), name="delete_category"),
     path('document/delete/<pk>', views.DeleteDocumentView.as_view(), name="delete_document"),

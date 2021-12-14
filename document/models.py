@@ -18,12 +18,12 @@ class Category(models.Model):
 
 
 class Document(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    validity_start = models.DateField()
-    file = models.FileField()
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user", null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="produkt")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="kategoria")
+    validity_start = models.DateField(verbose_name="ważny od")
+    file = models.FileField(verbose_name="plik")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="create_user")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.file.name
@@ -31,3 +31,12 @@ class Document(models.Model):
     def delete(self, *args, **kwargs):
         self.file.delete()
         super().delete(*args, **kwargs)
+
+
+class History(models.Model):
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, verbose_name="dokument")
+    element = models.CharField(max_length=100)
+    changed_from = models.CharField(max_length=100)
+    changed_to = models.CharField(max_length=100)
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="change_user")
+    changed_at = models.DateTimeField(auto_now_add=True)
