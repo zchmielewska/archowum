@@ -1,9 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 
+    <h3>{{ object.product.name }}</h3>
     <div class="brick">
-        <p>{{ object.product }}</p>
-        <p>{{ object.category }}</p>
+        <table>
+            <tr>
+                <td>Model przepływów pieniężnych: </td>
+                <td>{{ object.product.model }}</td>
+            </tr>
+            <tr>
+                <td>Kategoria dokumentu:</td>
+                <td>{{ object.category }}</td>
+            </tr>
+            <tr>
+                <td>Ważny od:</td>
+                <td>{{ object.validity_start }}</td>
+            </tr>
+            <tr>
+                <td>Utworzony przez:</td>
+                <td>{{ object.created_by }}</td>
+            </tr>
+            <tr>
+                <td>Data utworzenia:</td>
+                <td>{{ object.created_at }}</td>
+            </tr>
+            <tr>
+                <td>Dokument:</td>
+                <td>{{ object.file.name }}</td>
+            </tr>
+        </table>
+
+        <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
+
+        <a href="{% url "delete_document" document.id %}" class="button red-button" style="float: right;">Usuń</a>
+        <a href="" class="button" style="float: right;">Edytuj</a>
+
     </div>
+
 
 {% endblock %}

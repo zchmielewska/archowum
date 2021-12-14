@@ -14,7 +14,7 @@
             <table>
                 <tr>
                     <td>Produkt:</td>
-                    <td>{{ document.product.model }} ({{ document.product.name }})</td>
+                    <td>{{ document.product.name }} ({{ document.product.model }})</td>
                 </tr>
                 <tr>
                     <td>Kategoria dokumentu:</td>
@@ -29,7 +29,9 @@
                     <td>{{ document.file }}</td>
                 </tr>
             </table>
-            <a href="{% url "document_detail" document.id %}">zobacz więcej</a>
+            <div class="vertical-center">
+                <a href="{% url "document_detail" document.id %}" class="link">zobacz więcej</a>
+            </div>
         </div>
     {% empty %}
         <p>Jeszcze nie ma żadnego dokumentu.</p>

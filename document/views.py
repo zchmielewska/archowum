@@ -1,13 +1,18 @@
+import mimetypes
+import os
+
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
-from django.shortcuts import render, redirect
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import FormView, CreateView, UpdateView, DeleteView, DetailView
 
+from archowum import settings
 from document import models
 from document import forms
 
@@ -140,3 +145,20 @@ class LogoutView(View):
 class DocumentDetailView(DetailView):
     model = models.Document
 
+
+class DownloadDocumentView(View):
+    def get(self, request, pk):
+        document = get_object_or_404(models.Document, id=pk)
+        filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
+        if os.path.exists(filepath):
+            with open(filepath, 'rb') as fh:
+                mime_type, _ = mimetypes.guess_type(filepath)
+                response = HttpResponse(fh.read(), content_type=mime_type)
+                response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
+                return response
+        raise Http404
+
+
+class DeleteDocumentView(DeleteView):
+    model = models.Document
+    success_url = reverse_lazy("main")
