@@ -131,22 +131,22 @@ form > ul.errorlist {
   color: rgba(220, 53, 69, 1);
 }
 
-.manage-tbl {
+.striped-table, .product-detail-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.manage-tbl th {
+.striped-table th {
   border-top: 1px solid #ddd;
 }
 
-.manage-tbl th, .manage-tbl td {
+.striped-table th, .striped-table td, .product-detail-table td {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
-.manage-tbl tr:nth-child(even) {
+.striped-table tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 

@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <h3>{{ document.product.name }}</h3>
+    <h3>Szczegóły dokumentu</h3>
     <div class="brick">
-        <table>
+
+        <table class="product-detail-table">
+            <tr style="background-color: #f2f2f2;">
+                <td colspan="2"><strong>Produkt</strong></td>
+            </tr>
             <tr>
-                <td>Model przepływów pieniężnych: </td>
+                <td>Nazwa: </td>
+                <td>{{ document.product.name }}</td>
+            </tr>
+            <tr>
+                <td>Model: </td>
                 <td>{{ document.product.model }}</td>
+            </tr>
+            <tr style="background-color: #f2f2f2;">
+                <td colspan="2"><strong>Dokument</strong></td>
             </tr>
             <tr>
                 <td>Kategoria dokumentu:</td>
@@ -14,44 +25,45 @@
             </tr>
             <tr>
                 <td>Ważny od:</td>
-                <td>{{ document.validity_start }}</td>
+                <td>{{ document.validity_start|date:"Y-m-d" }}</td>
             </tr>
             <tr>
-                <td>Utworzony przez:</td>
-                <td>{{ document.created_by }}</td>
-            </tr>
-            <tr>
-                <td>Data utworzenia:</td>
-                <td>{{ document.created_at }}</td>
-            </tr>
-            <tr>
-                <td>Dokument:</td>
+                <td>Nazwa pliku:</td>
                 <td>{{ document.file.name }}</td>
             </tr>
         </table>
 
-        <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
+        <span style="display: inline-block; margin: 24px 0 0 12px; color: #333; font-size: 0.8em;">
+            Utworzony <strong>{{ document.created_at }}</strong> przez <strong>{{ document.created_by }}</strong>.
+        </span>
 
+        <br>
+        <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
         <a href="{% url "delete_document" document.id %}" class="button red-button" style="float: right;">Usuń</a>
         <a href="{% url "edit_document" document.id %}" class="button gray-button" style="float: right;">Edytuj</a>
 
-        <hr>
-        <p>Historia zmian</p>
-        <table>
-            <tr>
-                <td>Element</td>
-                <td>Przed zmianą</td>
-                <td>Po zmianie</td>
-                <td>Użytkownik</td>
-                <td>Data</td>
-            </tr>
-            {% for history in history_set %}
-                <p>{{ history }}</p>
-            {% endfor %}
-        </table>
-
-
+        {% if history_set %}
+            <hr style="margin: 24px 0 24px 0;">
+            <p class="vertical-center" style="font-weight: bold; font-size: 0.8em;">Historia zmian</p>
+            <table class="striped-table" style="font-size: 0.75em;">
+                <tr>
+                    <th>Element</th>
+                    <th>Przed zmianą</th>
+                    <th>Po zmianie</th>
+                    <th>Użytkownik</th>
+                    <th>Data</th>
+                </tr>
+                {% for history in history_set %}
+                <tr>
+                    <td>{{ history.element }}</td>
+                    <td>{{ history.changed_from }}</td>
+                    <td>{{ history.changed_to }}</td>
+                    <td>{{ history.changed_by }}</td>
+                    <td>{{ history.changed_at|date:"Y-m-d H:m" }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
     </div>
-
 
 {% endblock %}
