@@ -1,4 +1,10 @@
 {% extends "base.html" %}
+
+{% load static %}
+{% block head %}
+    <script src="{% static 'js/app.js' %}" type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
 
     <h3>Szczegóły dokumentu</h3>
@@ -42,31 +48,44 @@
         </span>
 
         <br>
-        <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
-        <a href="{% url "delete_document" document.id %}" class="button red-button" style="float: right;">Usuń</a>
-        <a href="{% url "edit_document" document.id %}" class="button gray-button" style="float: right;">Edytuj</a>
+        <div style="display: flex;">
+            {# Fake two buttons to center the middle button #}
+            <span class="button gray-button" style="visibility: hidden;">Edytuj</span>
+            <span class="button red-button" style="visibility: hidden;">Usuń</span>
+            <div style="flex-grow: 2;" class="vertical-center">
+                <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
+            </div>
+            <a href="{% url "edit_document" document.id %}" class="button gray-button">Edytuj</a>
+            <a href="{% url "delete_document" document.id %}" class="button red-button">Usuń</a>
+        </div>
 
         {% if history_set %}
-            <hr style="margin: 24px 0 24px 0;">
-            <p class="vertical-center" style="font-weight: bold; font-size: 0.8em;">Historia zmian</p>
-            <table class="striped-table" style="font-size: 0.75em;">
-                <tr>
-                    <th>Element</th>
-                    <th>Przed zmianą</th>
-                    <th>Po zmianie</th>
-                    <th>Użytkownik</th>
-                    <th>Data</th>
-                </tr>
-                {% for history in history_set %}
-                <tr>
-                    <td>{{ history.element }}</td>
-                    <td>{{ history.changed_from }}</td>
-                    <td>{{ history.changed_to }}</td>
-                    <td>{{ history.changed_by }}</td>
-                    <td>{{ history.changed_at|date:"Y-m-d H:m" }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+            <div id="show-history" class="vertical-center" style="margin: 24px 0 0 0; font-size: 0.75em;">
+                <strong>Zobacz historię zmian</strong>
+            </div>
+
+            <div id="history" style="display: none;">
+                <hr style="border: 1px dashed #999; margin: 24px 0 24px 0;">
+{#                <p class="vertical-center" style="font-weight: bold; font-size: 0.8em;">Historia zmian</p>#}
+                <table class="striped-table" style="font-size: 0.75em;">
+                    <tr>
+                        <th>Element</th>
+                        <th>Przed zmianą</th>
+                        <th>Po zmianie</th>
+                        <th>Użytkownik</th>
+                        <th>Data</th>
+                    </tr>
+                    {% for history in history_set %}
+                    <tr>
+                        <td>{{ history.element }}</td>
+                        <td>{{ history.changed_from }}</td>
+                        <td>{{ history.changed_to }}</td>
+                        <td>{{ history.changed_by }}</td>
+                        <td>{{ history.changed_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
         {% endif %}
     </div>
 

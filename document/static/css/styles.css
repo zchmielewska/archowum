@@ -208,3 +208,7 @@ form > ul.errorlist {
   cursor: pointer;
 }
 
+#show-history:hover {
+  color: #C58F00;
+  cursor: pointer;
+}
