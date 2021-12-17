@@ -3,8 +3,8 @@ from django.db import models
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100, verbose_name="nazwa produktu ubezpieczeniowego")
-    model = models.CharField(max_length=30, verbose_name="model przepływów pieniężnych")
+    name = models.CharField(max_length=60, verbose_name="nazwa produktu ubezpieczeniowego")
+    model = models.CharField(max_length=20, verbose_name="model przepływów pieniężnych")
 
     def __str__(self):
         return f"{self.name} ({self.model})"

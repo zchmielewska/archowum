@@ -16,12 +16,24 @@ from django.views.generic import FormView, CreateView, UpdateView, DeleteView, D
 from archowum import settings
 from document import models
 from document import forms
+from document.utils import utils
 
 
 class MainView(LoginRequiredMixin, View):
     def get(self, request):
-        documents = models.Document.objects.all().order_by("-id")[:10]
-        return render(request, "main.html", {"documents": documents})
+        phrase = request.GET.get("phrase")
+
+        if not phrase:
+            documents = models.Document.objects.order_by("-id")[:10]
+        else:
+            documents = utils.search(phrase)
+
+        ctx = {
+            "documents": documents,
+            "phrase": phrase,
+            "no_documents": documents.count(),
+        }
+        return render(request, "main.html", ctx)
 
 
 class ManageView(LoginRequiredMixin, View):
@@ -37,12 +49,6 @@ class AddProductView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("manage")
 
 
-class AddCategoryView(LoginRequiredMixin, CreateView):
-    model = models.Category
-    fields = "__all__"
-    success_url = reverse_lazy("manage")
-
-
 class EditProductView(LoginRequiredMixin, UpdateView):
     model = models.Product
     fields = "__all__"
@@ -50,15 +56,21 @@ class EditProductView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("manage")
 
 
+class DeleteProductView(DeleteView):
+    model = models.Product
+    success_url = reverse_lazy("manage")
+
+
+class AddCategoryView(LoginRequiredMixin, CreateView):
+    model = models.Category
+    fields = "__all__"
+    success_url = reverse_lazy("manage")
+
+
 class EditCategoryView(LoginRequiredMixin, UpdateView):
     model = models.Category
     fields = "__all__"
     template_name_suffix = "_update_form"
-    success_url = reverse_lazy("manage")
-
-
-class DeleteProductView(DeleteView):
-    model = models.Product
     success_url = reverse_lazy("manage")
 
 
@@ -144,6 +156,22 @@ class EditDocumentView(LoginRequiredMixin, UpdateView):
         return redirect("document_detail", document_new.id)
 
 
+class DeleteDocumentView(LoginRequiredMixin, DeleteView):
+    model = models.Document
+    success_url = reverse_lazy("main")
+
+
+class DocumentDetailView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        document = get_object_or_404(models.Document, pk=pk)
+        history_set = document.history_set.all()
+        ctx = {
+            "document": document,
+            "history_set": history_set,
+        }
+        return render(request, "document_detail.html", ctx)
+
+
 class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
@@ -155,11 +183,6 @@ class DownloadDocumentView(LoginRequiredMixin, View):
                 response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
                 return response
         raise Http404
-
-
-class DeleteDocumentView(LoginRequiredMixin, DeleteView):
-    model = models.Document
-    success_url = reverse_lazy("main")
 
 
 class RegisterView(View):
@@ -213,19 +236,4 @@ class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect("main")
-
-
-class DocumentDetailViewOld(LoginRequiredMixin, DetailView):
-    model = models.Document
-
-
-class DocumentDetailView(LoginRequiredMixin, View):
-    def get(self, request, pk):
-        document = get_object_or_404(models.Document, pk=pk)
-        history_set = document.history_set.all()
-        ctx = {
-            "document": document,
-            "history_set": history_set,
-        }
-        return render(request, "document_detail.html", ctx)
 

@@ -8,7 +8,12 @@
         </form>
     </div>
 
-    <h3>Ostatnie dokumenty</h3>
+    {% if phrase %}
+        <h3>Znalezione dokumenty ({{ no_documents }})</h3>
+    {% else %}
+        <h3>Ostatnie dokumenty</h3>
+    {% endif %}
+
     {% for document in documents %}
         <div class="brick">
             <table>

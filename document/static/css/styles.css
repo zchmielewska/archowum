@@ -45,7 +45,7 @@ body {
 
 .container {
   width: 70%;
-  margin: 0 auto;
+  margin: 0 auto 36px auto;
   display: flex;
   flex-direction: column;
 }

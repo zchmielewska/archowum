@@ -23,6 +23,7 @@ from document import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.MainView.as_view(), name="main"),
+    path('search/', views.MainView.as_view(), name="search"),
     path('document/add/', views.AddDocumentView.as_view(), name="add_document"),
     path('product/add/', views.AddProductView.as_view(), name="add_product"),
     path('category/add/', views.AddCategoryView.as_view(), name="add_category"),
