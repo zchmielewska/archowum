@@ -11,4 +11,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for _ in range(1000):
-            models.Product.objects.create(name=faker.text(max_nb_chars=60), model=faker.text(max_nb_chars=20))
+            models.Product.objects.create(name=faker.text(max_nb_chars=60), model=faker.word().upper())

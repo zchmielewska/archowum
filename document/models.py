@@ -32,6 +32,9 @@ class Document(models.Model):
         self.file.delete()
         super().delete(*args, **kwargs)
 
+    class Meta:
+        unique_together = ("product", "category", "validity_start")
+
 
 class History(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE, verbose_name="dokument")
