@@ -8,11 +8,20 @@ class DateInput(forms.DateInput):
     format = '%Y-%m-%d'
 
 
-class AddDocumentForm(forms.Form):
+class DocumentForm(forms.Form):
     product = forms.ModelChoiceField(queryset=models.Product.objects.all(), label="Produkt")
     category = forms.ModelChoiceField(queryset=models.Category.objects.all(), label="Kategoria dokumentu")
-    file = forms.FileField(label="Plik")
     validity_start = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), label="Ważny od")
+    file = forms.FileField(label="Plik")
+
+
+class DocumentForm2(forms.ModelForm):
+    class Meta:
+        model = models.Document
+        fields = ('product', 'category', 'validity_start', 'file')
+        widgets = {
+            'validity_start': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 
 class RegisterForm(forms.Form):

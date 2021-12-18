@@ -1,11 +1,15 @@
 import mimetypes
 import os
+import datetime
 
+from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.files.storage import FileSystemStorage
+from django.db import IntegrityError
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -43,117 +47,95 @@ class ManageView(LoginRequiredMixin, View):
         return render(request, "manage.html", {"categories": categories, "products": products})
 
 
-class AddProductView(LoginRequiredMixin, CreateView):
+class AddProductView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Product
     fields = "__all__"
     success_url = reverse_lazy("manage")
+    success_message = "Dodano nowy produkt!"
 
 
-class EditProductView(LoginRequiredMixin, UpdateView):
+class EditProductView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Product
     fields = "__all__"
     template_name_suffix = "_update_form"
     success_url = reverse_lazy("manage")
+    success_message = "Zaktualizowano produkt!"
 
 
-class DeleteProductView(DeleteView):
+class DeleteProductView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = models.Product
     success_url = reverse_lazy("manage")
+    success_message = "Usunięto produkt!"
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, self.success_message)
+        return super(DeleteProductView, self).delete(request, *args, **kwargs)
 
 
-class AddCategoryView(LoginRequiredMixin, CreateView):
+class AddCategoryView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Category
     fields = "__all__"
     success_url = reverse_lazy("manage")
+    success_message = "Dodano nową kategorię!"
 
 
-class EditCategoryView(LoginRequiredMixin, UpdateView):
+class EditCategoryView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Category
     fields = "__all__"
     template_name_suffix = "_update_form"
     success_url = reverse_lazy("manage")
+    success_message = "Zaktualizowano kategorię!"
 
 
-class DeleteCategoryView(DeleteView):
+class DeleteCategoryView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = models.Category
     success_url = reverse_lazy("manage")
+    success_message = "Usunięto kategorię!"
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, self.success_message)
+        return super(DeleteCategoryView, self).delete(request, *args, **kwargs)
 
 
 class AddDocumentView(LoginRequiredMixin, View):
     def get(self, request):
-        form = forms.AddDocumentForm
+        form = forms.DocumentForm
         return render(request, "document_form.html", {"form": form})
 
     def post(self, request):
-        form = forms.AddDocumentForm(request.POST, request.FILES)
+        form = forms.DocumentForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.cleaned_data.get("product")
             category = form.cleaned_data.get("category")
             validity_start = form.cleaned_data.get("validity_start")
             file = form.cleaned_data.get("file")
-            models.Document.objects.create(
-                product=product,
-                category=category,
-                validity_start=validity_start,
-                file=file,
-                created_by=request.user,
-            )
-            return redirect("main")
+            try:
+                models.Document.objects.create(
+                    product=product,
+                    category=category,
+                    validity_start=validity_start,
+                    file=file,
+                    created_by=request.user,
+                )
+                messages.success(request, 'Dodano nowy dokument!')
+                return redirect("main")
+            except IntegrityError:
+                messages.error(request, 'Dokument dla podanego produktu, kategorii i daty już istnieje.')
+                return render(request, "document_form.html", {"form": form})
+
         return render(request, "document_form.html", {"form": form})
 
 
-class EditDocumentView(LoginRequiredMixin, UpdateView):
-    model = models.Document
-    fields = ["product", "category", "validity_start", "file"]
-    template_name_suffix = "_update_form"
-
-    def form_valid(self, form):
-        document_new = form.save(commit=False)
-        document_old = models.Document.objects.get(pk=self.object.id)
-        now = timezone.now()
-
-        if not document_new.product == document_old.product:
-            models.History.objects.create(
-                document=document_old,
-                element="produkt",
-                changed_from=document_old.product,
-                changed_to=document_new.product,
-                changed_by=self.request.user,
-                changed_at=now,
-            )
-
-        if not document_new.category == document_old.category:
-            models.History.objects.create(
-                document=document_old,
-                element="kategoria dokumentu",
-                changed_from=document_old.category,
-                changed_to=document_new.category,
-                changed_by=self.request.user,
-                changed_at=now,
-            )
-
-        if not document_new.validity_start == document_old.validity_start:
-            models.History.objects.create(
-                document=document_old,
-                element="ważny od",
-                changed_from=document_old.validity_start,
-                changed_to=document_new.validity_start,
-                changed_by=self.request.user,
-                changed_at=now,
-            )
-
-        if not document_new.file == document_old.file:
-            models.History.objects.create(
-                document=document_old,
-                element="plik",
-                changed_from=document_old.file,
-                changed_to=document_new.file,
-                changed_by=self.request.user,
-                changed_at=now,
-            )
-
-        document_new.save()
-        return redirect("document_detail", document_new.id)
+class EditDocumentView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        document = models.Document.objects.get(pk=pk)
+        form = forms.DocumentForm(initial={
+            "product": document.product,
+            "category": document.category,
+            "validity_start": document.validity_start.strftime("%Y-%m-%d"),
+            "file": document.file,
+        })
+        return render(request, "document_update_form.html", {"form": form})
 
 
 class DeleteDocumentView(LoginRequiredMixin, DeleteView):

@@ -18,6 +18,17 @@
         </div>
 
         <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="vertical-center">
+                        <div class="messages {{ message.tags }}">
+                            {{ message }}
+                            <div class="close-button" onclick="this.parentElement.style.display='none';">&times;</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             {% block content %}{% endblock %}
             <div class="push"></div>
         </div>

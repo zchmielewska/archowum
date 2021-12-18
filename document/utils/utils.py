@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from document import models
 
 
@@ -13,3 +15,49 @@ def search(phrase):
     all_documents = d1 | d2 | d3 | d4 | d5 | d6 | d7 | d8
     documents = all_documents.distinct().order_by("-id")
     return documents
+
+
+def save_history(document_old, document_new):
+    now = timezone.now()
+
+    if not document_new.product == document_old.product:
+        models.History.objects.create(
+            document=document_old,
+            element="produkt",
+            changed_from=document_old.product,
+            changed_to=document_new.product,
+            changed_by=self.request.user,
+            changed_at=now,
+        )
+
+    if not document_new.category == document_old.category:
+        models.History.objects.create(
+            document=document_old,
+            element="kategoria dokumentu",
+            changed_from=document_old.category,
+            changed_to=document_new.category,
+            changed_by=self.request.user,
+            changed_at=now,
+        )
+
+    if not document_new.validity_start == document_old.validity_start:
+        models.History.objects.create(
+            document=document_old,
+            element="ważny od",
+            changed_from=document_old.validity_start,
+            changed_to=document_new.validity_start,
+            changed_by=self.request.user,
+            changed_at=now,
+        )
+
+    if not document_new.file == document_old.file:
+        models.History.objects.create(
+            document=document_old,
+            element="plik",
+            changed_from=document_old.file,
+            changed_to=document_new.file,
+            changed_by=self.request.user,
+            changed_at=now,
+        )
+
+    return None

@@ -50,8 +50,7 @@ body {
   flex-direction: column;
 }
 
-/* wrapper and push are used to make footer sticky */
-.wrapper {
+.wrapper { /* wrapper and push are used to make footer sticky */
     min-height: 100%;
     margin-bottom: -48px;
 }
@@ -71,6 +70,39 @@ body {
   font-size: 0.9em;
 }
 
+.messages {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding-left: 12px;
+  font-size: 0.8em;
+  line-height: 1.4em;
+  border-radius: 4px;
+  font-weight: bold;
+
+}
+
+.success {
+  background-color: rgba(11, 102, 35, 0.2);
+  color: rgba(11, 102, 35, 0.9);
+}
+
+.error {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: rgba(220, 53, 69, 0.9);
+}
+
+.close-button {
+  padding: 8px 12px;
+  float: right;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
 /* Content */
 .brick {
   background-color: #fff;
@@ -84,7 +116,7 @@ body {
 }
 
 .search {
-  margin-top: 36px;
+  margin-top: 24px;
   margin-bottom: 48px;
 }
 

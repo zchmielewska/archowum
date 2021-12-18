@@ -9,12 +9,18 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} ({self.model})"
 
+    class Meta:
+        ordering = ["name"]
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="nazwa")
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["name"]
 
 
 class Document(models.Model):
