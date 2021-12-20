@@ -70,7 +70,6 @@ class DeleteProductView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)
-        # TODO tutaj trzeba dodać usuwanie wszystkich plików dokumentów związanych z produktem
         return super(DeleteProductView, self).delete(request, *args, **kwargs)
 
 
@@ -96,7 +95,6 @@ class DeleteCategoryView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)
-        # TODO tutaj trzeba dodać usuwanie wszystkich plików dokumentów związanych z kategorią
         return super(DeleteCategoryView, self).delete(request, *args, **kwargs)
 
 

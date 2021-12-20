@@ -9,6 +9,13 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} ({self.model})"
 
+    def delete(self, *args, **kwargs):
+        documents = self.document_set.all()
+        files = [document.file for document in documents]
+        for file in files:
+            file.delete()
+        super().delete(*args, **kwargs)
+
     def number_of_documents(self):
         return self.document_set.count()
 
@@ -21,6 +28,13 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def delete(self, *args, **kwargs):
+        documents = self.document_set.all()
+        files = [document.file for document in documents]
+        for file in files:
+            file.delete()
+        super().delete(*args, **kwargs)
 
     def number_of_documents(self):
         return self.document_set.count()
