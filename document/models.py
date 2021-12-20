@@ -9,6 +9,9 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} ({self.model})"
 
+    def number_of_documents(self):
+        return self.document_set.count()
+
     class Meta:
         ordering = ["name"]
 
@@ -18,6 +21,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def number_of_documents(self):
+        return self.document_set.count()
 
     class Meta:
         ordering = ["name"]

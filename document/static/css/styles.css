@@ -92,6 +92,12 @@ body {
   color: rgba(220, 53, 69, 0.9);
 }
 
+
+.info {
+  background-color: rgba(1, 87, 155, 0.2);
+  color: rgba(1, 87, 155, 0.9);
+}
+
 .close-button {
   padding: 8px 12px;
   float: right;
@@ -166,6 +172,7 @@ form > ul.errorlist {
 .striped-table, .product-detail-table {
   width: 100%;
   border-collapse: collapse;
+  white-space: nowrap;
 }
 
 .striped-table th {

@@ -17,46 +17,92 @@ def search(phrase):
     return documents
 
 
-def save_history(document_old, document_new):
+def save_historyOld(document1, document2, self):
     now = timezone.now()
 
-    if not document_new.product == document_old.product:
+    if not document1.product == document2.product:
         models.History.objects.create(
-            document=document_old,
+            document=document1,
             element="produkt",
-            changed_from=document_old.product,
-            changed_to=document_new.product,
+            changed_from=document1.product,
+            changed_to=document2.product,
             changed_by=self.request.user,
             changed_at=now,
         )
 
-    if not document_new.category == document_old.category:
+    if not document1.category == document2.category:
         models.History.objects.create(
-            document=document_old,
+            document=document1,
             element="kategoria dokumentu",
-            changed_from=document_old.category,
-            changed_to=document_new.category,
+            changed_from=document1.category,
+            changed_to=document2.category,
             changed_by=self.request.user,
             changed_at=now,
         )
 
-    if not document_new.validity_start == document_old.validity_start:
+    if not document1.validity_start == document2.validity_start:
         models.History.objects.create(
-            document=document_old,
+            document=document1,
             element="ważny od",
-            changed_from=document_old.validity_start,
-            changed_to=document_new.validity_start,
+            changed_from=document1.validity_start,
+            changed_to=document2.validity_start,
             changed_by=self.request.user,
             changed_at=now,
         )
 
-    if not document_new.file == document_old.file:
+    if not document1.file == document2.file:
         models.History.objects.create(
-            document=document_old,
+            document=document1,
             element="plik",
-            changed_from=document_old.file,
-            changed_to=document_new.file,
+            changed_from=document1.file,
+            changed_to=document2.file,
             changed_by=self.request.user,
+            changed_at=now,
+        )
+
+    return None
+
+
+def save_history(data1, data2, user):
+    now = timezone.now()
+
+    if not data1["product_id"] == data2["product_id"]:
+        models.History.objects.create(
+            document_id=data1["id"],
+            element="produkt",
+            changed_from=models.Product.objects.get(id=data1["product_id"]),
+            changed_to=models.Product.objects.get(id=data2["product_id"]),
+            changed_by=user,
+            changed_at=now,
+        )
+
+    if not data1["category_id"] == data2["category_id"]:
+        models.History.objects.create(
+            document_id=data1["id"],
+            element="kategoria dokumentu",
+            changed_from=models.Category.objects.get(id=data1["category_id"]),
+            changed_to=models.Category.objects.get(id=data2["category_id"]),
+            changed_by=user,
+            changed_at=now,
+        )
+
+    if not data1["validity_start"] == data2["validity_start"]:
+        models.History.objects.create(
+            document_id=data1["id"],
+            element="ważny od",
+            changed_from=data1["validity_start"],
+            changed_to=data2["validity_start"],
+            changed_by=user,
+            changed_at=now,
+        )
+
+    if not data1["file"] == data2["file"]:
+        models.History.objects.create(
+            document_id=data1["id"],
+            element="plik",
+            changed_from=data1["file"],
+            changed_to=data2["file"],
+            changed_by=user,
             changed_at=now,
         )
 

@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError
+from django.forms import model_to_dict
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -69,6 +70,7 @@ class DeleteProductView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)
+        # TODO tutaj trzeba dodać usuwanie wszystkich plików dokumentów związanych z produktem
         return super(DeleteProductView, self).delete(request, *args, **kwargs)
 
 
@@ -94,6 +96,7 @@ class DeleteCategoryView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)
+        # TODO tutaj trzeba dodać usuwanie wszystkich plików dokumentów związanych z kategorią
         return super(DeleteCategoryView, self).delete(request, *args, **kwargs)
 
 
@@ -109,33 +112,55 @@ class AddDocumentView(LoginRequiredMixin, View):
             category = form.cleaned_data.get("category")
             validity_start = form.cleaned_data.get("validity_start")
             file = form.cleaned_data.get("file")
-            try:
-                models.Document.objects.create(
-                    product=product,
-                    category=category,
-                    validity_start=validity_start,
-                    file=file,
-                    created_by=request.user,
-                )
-                messages.success(request, 'Dodano nowy dokument!')
-                return redirect("main")
-            except IntegrityError:
-                messages.error(request, 'Dokument dla podanego produktu, kategorii i daty już istnieje.')
-                return render(request, "document_form.html", {"form": form})
+            document = models.Document.objects.create(
+                product=product,
+                category=category,
+                validity_start=validity_start,
+                file=file,
+                created_by=request.user,
+            )
+            messages.success(request, "Dodano nowy dokument!")
+
+            if document.file != file:
+                text = f"Plik o nazwie {file} już istnieje. Przesłany plik zapisano jako {document.file}."
+                messages.info(request, text)
+
+            return redirect("main")
 
         return render(request, "document_form.html", {"form": form})
 
 
-class EditDocumentView(LoginRequiredMixin, View):
-    def get(self, request, pk):
-        document = models.Document.objects.get(pk=pk)
-        form = forms.DocumentForm(initial={
-            "product": document.product,
-            "category": document.category,
-            "validity_start": document.validity_start.strftime("%Y-%m-%d"),
-            "file": document.file,
-        })
-        return render(request, "document_update_form.html", {"form": form})
+class EditDocumentView(LoginRequiredMixin, UpdateView):
+    model = models.Document
+    template_name_suffix = "_update_form"
+    form_class = forms.DocumentForm
+
+    def get_initial(self):
+        initial = super(EditDocumentView, self).get_initial()
+        initial["validity_start"] = self.object.validity_start.strftime("%Y-%m-%d")
+        return initial
+
+    def form_valid(self, form):
+        # Filename after saving might differ from the one uploaded
+        file = form.cleaned_data.get("file")
+        document_new = form.save(commit=False)
+
+        # Filename is converted to None after deletion
+        document_old = models.Document.objects.get(id=document_new.id)
+        data_old = document_old.__dict__.copy()
+        if self.request.FILES.get("file"):
+            document_old.file.delete()
+
+        document_new.save()
+        data_new = document_new.__dict__.copy()
+        utils.save_history(data_old, data_new, user=self.request.user)
+
+        messages.success(self.request, "Zaktualizowano dokument!")
+        if document_new.file != file:
+            text = f"Plik o nazwie {file} już istnieje. Przesłany plik zapisano jako {document_new.file}."
+            messages.info(self.request, text)
+
+        return redirect("document_detail", document_new.id)
 
 
 class DeleteDocumentView(LoginRequiredMixin, DeleteView):
@@ -146,7 +171,7 @@ class DeleteDocumentView(LoginRequiredMixin, DeleteView):
 class DocumentDetailView(LoginRequiredMixin, View):
     def get(self, request, pk):
         document = get_object_or_404(models.Document, pk=pk)
-        history_set = document.history_set.all()
+        history_set = document.history_set.all().order_by("-changed_at")
         ctx = {
             "document": document,
             "history_set": history_set,
