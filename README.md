@@ -6,4 +6,4 @@ The application helps insurance professionals, e.g. **actuaries**, store and sea
 
 Thanks to arch**owu**m, all documents can be well organised and auditable.
 
-Access the demo of the application here:
+To access the demo of the application, click here: [archowum.herokuapp.com](https://archowum.herokuapp.com/)
