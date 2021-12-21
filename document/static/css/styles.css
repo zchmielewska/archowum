@@ -4,8 +4,8 @@ a { color: inherit; text-decoration: none; }
 
 /* Main page */
 html {
-    height: 100%;
-    margin: 0;
+  height: 100%;
+  margin: 0;
 }
 
 body {
@@ -13,7 +13,7 @@ body {
   margin: 0;
   font-family: 'Ubuntu', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
   background-color: #eee;
-  overflow-y : scroll;
+  /*overflow-y : scroll;*/
 }
 
 .navbar {
@@ -26,10 +26,10 @@ body {
   color: #f2f2f2;
   width: 70%;
   margin: 0 auto;
-  font-size: 17px;
+  font-size: 1.1em;
 }
 
-.push {
+.push-navcontent {
   margin-left: auto;
   margin-right: 16px;
 }
@@ -51,12 +51,12 @@ body {
 }
 
 .wrapper { /* wrapper and push are used to make footer sticky */
-    min-height: 100%;
-    margin-bottom: -48px;
+  min-height: 100%;
+  margin-bottom: -48px;
 }
 
 .footer, .push {
-    height: 48px;
+  height: 48px;
 }
 
 .footer {
@@ -70,6 +70,7 @@ body {
   font-size: 0.9em;
 }
 
+/* Messages */
 .messages {
   display: flex;
   align-items: center;
@@ -79,7 +80,6 @@ body {
   line-height: 1.4em;
   border-radius: 4px;
   font-weight: bold;
-
 }
 
 .success {
@@ -198,6 +198,7 @@ form > ul.errorlist {
   justify-content: center;
 }
 
+/*  Buttons */
 .button {
   background-color: #fff;
   cursor: pointer;
@@ -250,4 +251,28 @@ form > ul.errorlist {
 #show-history:hover {
   color: #C58F00;
   cursor: pointer;
+}
+
+
+@media only screen and (max-width: 768px) {
+  .navcontent {
+    width: 90%;
+  }
+
+  .container {
+    width: 90%;
+  }
+
+  .footer-content {
+    width: 90%;
+  }
+
+  .navcontent {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .push-navcontent {
+    margin: 0;
+  }
 }
