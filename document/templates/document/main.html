@@ -1,9 +1,15 @@
 {% extends "base.html" %}
+
+{% load static %}
+{% block head %}
+    <script src="{% static 'js/search_focus.js' %}" type="text/javascript"></script>
+{% endblock %}
+
 {% block content %}
     <div class="search">
         <h2>Znajdź dokument</h2>
         <form action="/search" method="get">
-            <input type="text" name="phrase">
+            <input type="text" name="phrase" id="search_field">
             <button type="submit">Szukaj</button>
         </form>
     </div>
