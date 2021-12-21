@@ -12,8 +12,10 @@
         <div class="navbar">
             <div class="navcontent">
                 <div><a href="/">ARCH<strong>OWU</strong>M</a></div>
-                <div class="push"><a href="{% url "add_document" %}">Dodaj dokument</a></div>
-                <div><a href="{% url "manage" %}">Zarządzaj</a></div>
+                {% if user_is_manager %}
+                    <div class="push"><a href="{% url "add_document" %}">Dodaj dokument</a></div>
+                    <div><a href="{% url "manage" %}">Zarządzaj</a></div>
+                {% endif %}
             </div>
         </div>
 

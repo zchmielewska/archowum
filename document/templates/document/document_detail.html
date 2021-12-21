@@ -53,14 +53,20 @@
 
         <br>
         <div style="display: flex;">
-            {# Fake two buttons to center the middle button #}
-            <span class="button gray-button" style="visibility: hidden;">Edytuj</span>
-            <span class="button red-button" style="visibility: hidden;">Usuń</span>
+            {% if user_is_manager %}
+                {# Fake two buttons to center the middle button #}
+                <span class="button gray-button" style="visibility: hidden;">Edytuj</span>
+                <span class="button red-button" style="visibility: hidden;">Usuń</span>
+            {% endif %}
+
             <div style="flex-grow: 2;" class="vertical-center">
                 <a href="{% url "download" document.id %}" class="button green-button">Pobierz dokument</a>
             </div>
-            <a href="{% url "edit_document" document.id %}" class="button gray-button">Edytuj</a>
-            <a href="{% url "delete_document" document.id %}" class="button red-button">Usuń</a>
+
+            {% if user_is_manager %}
+                <a href="{% url "edit_document" document.id %}" class="button gray-button">Edytuj</a>
+                <a href="{% url "delete_document" document.id %}" class="button red-button">Usuń</a>
+            {% endif %}
         </div>
 
         {% if history_set %}

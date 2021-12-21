@@ -15,7 +15,7 @@
     </div>
 
     {% if phrase %}
-        <h3>Znalezione dokumenty ({{ no_documents }})</h3>
+        <h3>Znalezione dokumenty ({{ no_documents }}) dla frazy <i>{{ phrase }}</i></h3>
     {% else %}
         <h3>Ostatnie dokumenty</h3>
     {% endif %}
@@ -48,7 +48,7 @@
         </div>
     {% empty %}
         {% if phrase %}
-            <p>Nie znaleziono żadnego dokumentu dla frazy <strong>{{ phrase }}</strong>.</p>
+            <p>Nie znaleziono żadnego dokumentu.</p>
         {% else %}
             <p>Jeszcze nie ma żadnego dokumentu.</p>
         {% endif %}
