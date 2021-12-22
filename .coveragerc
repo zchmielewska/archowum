@@ -1,0 +1,16 @@
+[run]
+include =
+    ./archowum/*
+    ./document/*
+omit =
+    ./document/admin.py
+    ./document/apps.py
+    ./document/contexts.py
+    ./document/forms.py
+    ./document/management/*
+    ./document/migrations/*
+    ./document/models.py
+    ./archowum/settings.py
+    ./archowum/urls.py
+    *__init__*
+    *test*
