@@ -4,6 +4,15 @@ from document import models
 
 
 def search(phrase):
+    """
+    Search documents with phrase.
+
+    Finds all documents that contain the phrase in one or more of the following attributes:
+    id, product name, product model, category, validity start, file, created by, created at.
+
+    :param phrase: string, phrase based on which the documents are filtered
+    :return: queryset
+    """
     d1 = models.Document.objects.filter(id__icontains=phrase)
     d2 = models.Document.objects.filter(product__name__icontains=phrase)
     d3 = models.Document.objects.filter(product__model__icontains=phrase)
@@ -15,52 +24,6 @@ def search(phrase):
     all_documents = d1 | d2 | d3 | d4 | d5 | d6 | d7 | d8
     documents = all_documents.distinct().order_by("-id")
     return documents
-
-
-def save_historyOld(document1, document2, self):
-    now = timezone.now()
-
-    if not document1.product == document2.product:
-        models.History.objects.create(
-            document=document1,
-            element="produkt",
-            changed_from=document1.product,
-            changed_to=document2.product,
-            changed_by=self.request.user,
-            changed_at=now,
-        )
-
-    if not document1.category == document2.category:
-        models.History.objects.create(
-            document=document1,
-            element="kategoria dokumentu",
-            changed_from=document1.category,
-            changed_to=document2.category,
-            changed_by=self.request.user,
-            changed_at=now,
-        )
-
-    if not document1.validity_start == document2.validity_start:
-        models.History.objects.create(
-            document=document1,
-            element="ważny od",
-            changed_from=document1.validity_start,
-            changed_to=document2.validity_start,
-            changed_by=self.request.user,
-            changed_at=now,
-        )
-
-    if not document1.file == document2.file:
-        models.History.objects.create(
-            document=document1,
-            element="plik",
-            changed_from=document1.file,
-            changed_to=document2.file,
-            changed_by=self.request.user,
-            changed_at=now,
-        )
-
-    return None
 
 
 def save_history(data1, data2, user):

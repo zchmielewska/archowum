@@ -19,17 +19,22 @@ from document.utils import utils
 
 
 class MainView(LoginRequiredMixin, View):
+    """
+    Home page of the application.
+
+    Shows ten newest documents in reverse-chronological order.
+    Allows searching documents using a phrase.
+    """
     def get(self, request):
         phrase = request.GET.get("phrase")
-
-        if not phrase:
-            documents = models.Document.objects.order_by("-id")[:10]
-        else:
+        if phrase:
             documents = utils.search(phrase)
+        else:
+            documents = models.Document.objects.order_by("-id")[:10]
 
         ctx = {
-            "documents": documents,
             "phrase": phrase,
+            "documents": documents,
             "no_documents": documents.count(),
         }
         return render(request, "main.html", ctx)

@@ -1,0 +1,89 @@
+[
+  {"model": "document.product", "pk": 1, "fields": {"name": "Produkt testowy", "model": "TEST"}},
+  {"model": "document.category", "pk": 1, "fields": {"name": "OWU"}},
+  {"model": "auth.User", "pk": 1, "fields": {"username":  "test_user"}},
+
+  {"model": "document.document", "pk": 1,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-01", "file": "file1.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 2,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-02", "file": "file2.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 3,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-03", "file": "file3.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 4,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-04", "file": "file4.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 5,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-05", "file": "file5.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 6,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-06", "file": "file6.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 7,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-07", "file": "file7.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 8,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-08", "file": "file8.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 9,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-09", "file": "file9.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 10,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-10", "file": "file10.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 11,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-11", "file": "file11.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  },
+
+  {"model": "document.document", "pk": 12,
+    "fields": {
+      "product_id": 1, "category_id": 1, "validity_start": "2022-01-12", "file": "file12.pdf",
+      "created_by_id": 1, "created_at": "2012-09-04 06:00Z"
+    }
+  }
+]
