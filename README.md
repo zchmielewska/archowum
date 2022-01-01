@@ -1,5 +1,5 @@
 ![status](https://github.com/zchmielewska/archowum/actions/workflows/ci.yml/badge.svg)
-[![codecov](https://codecov.io/gh/zchmielewska/optyjaciel/branch/main/graph/badge.svg)](https://codecov.io/gh/zchmielewska/optyjaciel)
+[![codecov](https://codecov.io/gh/zchmielewska/archowum/branch/main/graph/badge.svg)](https://codecov.io/gh/zchmielewska/archowum)
 
 # archowum
 
