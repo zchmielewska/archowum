@@ -3,7 +3,7 @@ import os
 
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404, HttpResponse
@@ -33,21 +33,33 @@ class MainView(LoginRequiredMixin, View):
             documents = models.Document.objects.order_by("-id")[:10]
 
         ctx = {
-            "phrase": phrase,
             "documents": documents,
+            "phrase": phrase,
             "no_documents": documents.count(),
         }
         return render(request, "main.html", ctx)
 
 
-class ManageView(LoginRequiredMixin, View):
+class ManageView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Manage products and categories. Add, edit or delete objects.
+    """
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
+
     def get(self, request):
         categories = models.Category.objects.all().order_by("id")
         products = models.Product.objects.all().order_by("id")
         return render(request, "manage.html", {"categories": categories, "products": products})
 
 
-class AddProductView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AddProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, CreateView):
+    """
+    Form to add new product.
+    """
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
+
     model = models.Product
     fields = "__all__"
     success_url = reverse_lazy("manage")
