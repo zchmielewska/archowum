@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User, Group
 from django.test import Client, TestCase
 
+from document import models
+
 
 class TestMainView00(TestCase):
     def setUp(self):
@@ -187,5 +189,104 @@ class TestAddProductView(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        pass
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
 
+        no_products = models.Product.objects.count()
+        self.assertEqual(no_products, 0)
+
+        data = {
+            "name": "Produkt testowy",
+            "model": "TEST"
+        }
+        response = self.client.post("/product/add/", data)
+        self.assertEqual(response.url, "/manage/")
+
+        no_products = models.Product.objects.count()
+        self.assertEqual(no_products, 1)
+        self.assertEqual(models.Product.objects.first().name, "Produkt testowy")
+
+
+class TestEditProductView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/product/edit/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/product/edit/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/product/edit/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/product/edit/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        products = models.Product.objects
+        self.assertEqual(products.count(), 1)
+        self.assertEqual(products.first().model, "TEST")
+
+        data = {
+            "name": "Produkt tostowy",
+            "model": "TOST"
+        }
+        response = self.client.post("/product/edit/1", data)
+        self.assertEqual(response.url, "/manage/")
+
+        products = models.Product.objects
+        self.assertEqual(products.count(), 1)
+        self.assertEqual(products.first().model, "TOST")
+
+
+class TestDeleteProductView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/product/delete/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/product/delete/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/product/delete/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/product/delete/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        products = models.Product.objects
+        self.assertEqual(products.count(), 1)
+        self.assertEqual(products.first().model, "TEST")
+
+        response = self.client.post("/product/delete/1")
+        self.assertEqual(response.url, "/manage/")
+
+        products = models.Product.objects
+        self.assertEqual(products.count(), 0)

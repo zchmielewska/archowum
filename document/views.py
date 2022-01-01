@@ -55,7 +55,7 @@ class ManageView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class AddProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, CreateView):
     """
-    Form to add new product.
+    Form to add a new product.
     """
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
@@ -66,7 +66,13 @@ class AddProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixi
     success_message = "Dodano nowy produkt!"
 
 
-class EditProductView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class EditProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, UpdateView):
+    """
+    Form to edit an existing product.
+    """
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
+
     model = models.Product
     fields = "__all__"
     template_name_suffix = "_update_form"
@@ -74,10 +80,16 @@ class EditProductView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = "Zaktualizowano produkt!"
 
 
-class DeleteProductView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
+    """
+    Delete a product.
+    """
     model = models.Product
     success_url = reverse_lazy("manage")
     success_message = "Usunięto produkt!"
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)
