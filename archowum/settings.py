@@ -28,9 +28,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don"t run with debug turned on in production!
-DEBUG = os.getenv("DEBUG") == "True"
+DEBUG = (os.getenv("DEBUG") == "True")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", ".herokuapp.com"]
 
 
 # Application definition
@@ -90,6 +90,19 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
     }
 }
+
+# DB configuration used for github workflow
+if os.environ.get('GITHUB_WORKFLOW'):
+    DATABASES = {
+        'default': {
+           'ENGINE': 'django.db.backends.postgresql_psycopg2',
+           'NAME': 'github_actions',
+           'USER': "postgres",
+           'PASSWORD': "postgres",
+           'HOST': 'localhost',
+           'PORT': 5432,
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
