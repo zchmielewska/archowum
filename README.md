@@ -1,12 +1,16 @@
+![status](https://github.com/zchmielewska/archowum/actions/workflows/ci.yml/badge.svg)
+
 # archowum
 
-arch**owu**m is a web application that you can install in the  **insurance companies** intranet.
+Arch**owu**m, czyli archiwum OWU, to aplikacja przeznaczona dla profesjonalistów z branży ubezpieczeniowej.
 
-The application helps insurance professionals, e.g. **actuaries**, store and search insurance products' documentation.
+W szczególności, aplikacja pomaga aktuariuszom w przechowywaniu i wyszukiwaniu dokumentacji produktów ubezpieczeniowych.
 
-Thanks to arch**owu**m, all documents can be well organised and auditable.
+Dokumentacja produktów ubezpieczeniowych pomaga w utrzymywaniu istniejących i tworzeniu nowych modeli przepływów pieniężnych.
 
-To access the demo of the application, click here: [archowum.herokuapp.com](https://archowum.herokuapp.com/)
+Archowum - dokumenty są w porządku!
+
+Wersja demonstracyjna aplikacji znajduje się pod adresem: [archowum.herokuapp.com](https://archowum.herokuapp.com/)
 
 ---
 
