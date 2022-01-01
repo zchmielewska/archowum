@@ -96,25 +96,43 @@ class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageM
         return super(DeleteProductView, self).delete(request, *args, **kwargs)
 
 
-class AddCategoryView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AddCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, CreateView):
+    """
+    Form to add a new category.
+    """
     model = models.Category
     fields = "__all__"
     success_url = reverse_lazy("manage")
     success_message = "Dodano nową kategorię!"
 
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
 
-class EditCategoryView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+
+class EditCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, UpdateView):
+    """
+    Form to edit an existing category.
+    """
     model = models.Category
     fields = "__all__"
     template_name_suffix = "_update_form"
     success_url = reverse_lazy("manage")
     success_message = "Zaktualizowano kategorię!"
 
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
 
-class DeleteCategoryView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+
+class DeleteCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
+    """
+    Delete a category.
+    """
     model = models.Category
     success_url = reverse_lazy("manage")
     success_message = "Usunięto kategorię!"
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
 
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, self.success_message)

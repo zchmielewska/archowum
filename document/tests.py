@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 from document import models
 
 
-class TestMainView00(TestCase):
+class TestMainView(TestCase):
     def setUp(self):
         self.client = Client()
 
@@ -103,7 +103,7 @@ class TestMainView03(TestCase):
         self.assertEqual(response.context.get("documents").first().id, 12)
 
 
-class TestManageView00(TestCase):
+class TestManageView(TestCase):
     def setUp(self):
         self.client = Client()
 
@@ -290,3 +290,119 @@ class TestDeleteProductView01(TestCase):
 
         products = models.Product.objects
         self.assertEqual(products.count(), 0)
+
+
+class TestAddCategoryView(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/category/add/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/category/add/")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/category/add/")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/category/add/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        no_categories = models.Category.objects.count()
+        self.assertEqual(no_categories, 0)
+
+        response = self.client.post("/category/add/", {"name": "OWU"})
+        self.assertEqual(response.url, "/manage/")
+
+        no_categories = models.Category.objects.count()
+        self.assertEqual(no_categories, 1)
+        self.assertEqual(models.Category.objects.first().name, "OWU")
+
+
+class TestEditCategoryView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/category/edit/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/category/edit/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/category/edit/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/category/edit/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        categories = models.Category.objects
+        self.assertEqual(categories.count(), 1)
+        self.assertEqual(categories.first().name, "OWU")
+
+        response = self.client.post("/category/edit/1", {"name": "UFO"})
+        self.assertEqual(response.url, "/manage/")
+
+        categories = models.Category.objects
+        self.assertEqual(categories.count(), 1)
+        self.assertEqual(categories.first().name, "UFO")
+
+
+class TestDeleteCategoryView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/category/delete/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/category/delete/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/category/delete/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/category/delete/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        categories = models.Category.objects
+        self.assertEqual(categories.count(), 1)
+        self.assertEqual(categories.first().name, "OWU")
+
+        response = self.client.post("/category/delete/1")
+        self.assertEqual(response.url, "/manage/")
+
+        categories = models.Category.objects
+        self.assertEqual(categories.count(), 0)
