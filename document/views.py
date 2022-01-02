@@ -41,9 +41,7 @@ class MainView(LoginRequiredMixin, View):
 
 
 class ManageView(LoginRequiredMixin, UserPassesTestMixin, View):
-    """
-    Manage products and categories. Add, edit or delete objects.
-    """
+    """Manage products and categories. Add, edit or delete objects."""
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
 
@@ -54,9 +52,7 @@ class ManageView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class AddProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, CreateView):
-    """
-    Form to add a new product.
-    """
+    """Form to add a new product."""
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
 
@@ -67,9 +63,7 @@ class AddProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixi
 
 
 class EditProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, UpdateView):
-    """
-    Form to edit an existing product.
-    """
+    """Form to edit an existing product."""
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
 
@@ -81,9 +75,7 @@ class EditProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMix
 
 
 class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
-    """
-    Delete a product.
-    """
+    """Delete a product."""
     model = models.Product
     success_url = reverse_lazy("manage")
     success_message = "Usunięto produkt!"
@@ -97,9 +89,7 @@ class DeleteProductView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageM
 
 
 class AddCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, CreateView):
-    """
-    Form to add a new category.
-    """
+    """Form to add a new category."""
     model = models.Category
     fields = "__all__"
     success_url = reverse_lazy("manage")
@@ -110,9 +100,7 @@ class AddCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMix
 
 
 class EditCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, UpdateView):
-    """
-    Form to edit an existing category.
-    """
+    """Form to edit an existing category."""
     model = models.Category
     fields = "__all__"
     template_name_suffix = "_update_form"
@@ -124,9 +112,7 @@ class EditCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMi
 
 
 class DeleteCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, DeleteView):
-    """
-    Delete a category.
-    """
+    """Delete a category."""
     model = models.Category
     success_url = reverse_lazy("manage")
     success_message = "Usunięto kategorię!"
@@ -139,7 +125,11 @@ class DeleteCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         return super(DeleteCategoryView, self).delete(request, *args, **kwargs)
 
 
-class AddDocumentView(LoginRequiredMixin, View):
+class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Add a new document."""
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
+
     def get(self, request):
         form = forms.DocumentForm
         return render(request, "document_form.html", {"form": form})
@@ -150,18 +140,18 @@ class AddDocumentView(LoginRequiredMixin, View):
             product = form.cleaned_data.get("product")
             category = form.cleaned_data.get("category")
             validity_start = form.cleaned_data.get("validity_start")
-            file = form.cleaned_data.get("file")
+            form_file = form.cleaned_data.get("file")
             document = models.Document.objects.create(
                 product=product,
                 category=category,
                 validity_start=validity_start,
-                file=file,
+                file=form_file,
                 created_by=request.user,
             )
             messages.success(request, "Dodano nowy dokument!")
 
-            if document.file != file:
-                text = f"Plik o nazwie {file} już istnieje. Przesłany plik zapisano jako {document.file}."
+            if document.file != form_file:
+                text = f"Plik o nazwie {form_file} już istnieje. Przesłany plik zapisano jako {document.file}."
                 messages.info(request, text)
 
             return redirect("main")
@@ -169,10 +159,18 @@ class AddDocumentView(LoginRequiredMixin, View):
         return render(request, "document_form.html", {"form": form})
 
 
-class EditDocumentView(LoginRequiredMixin, UpdateView):
+class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """
+    Edit an existing document.
+
+    Save history of the changes made to the document.
+    """
     model = models.Document
     template_name_suffix = "_update_form"
     form_class = forms.DocumentForm
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
 
     def get_initial(self):
         initial = super(EditDocumentView, self).get_initial()
@@ -181,7 +179,7 @@ class EditDocumentView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         # Filename after saving might differ from the one uploaded
-        file = form.cleaned_data.get("file")
+        form_file = form.cleaned_data.get("file")
         document_new = form.save(commit=False)
 
         # Filename is converted to None after deletion
@@ -190,24 +188,32 @@ class EditDocumentView(LoginRequiredMixin, UpdateView):
         if self.request.FILES.get("file"):
             document_old.file.delete()
 
+        # History of changes gets saved
         document_new.save()
         data_new = document_new.__dict__.copy()
         utils.save_history(data_old, data_new, user=self.request.user)
 
         messages.success(self.request, "Zaktualizowano dokument!")
-        if document_new.file != file:
-            text = f"Plik o nazwie {file} już istnieje. Przesłany plik zapisano jako {document_new.file}."
+
+        # Other documents might use the file with the same name
+        if document_new.file != form_file:
+            text = f"Plik o nazwie {form_file} już istnieje. Przesłany plik zapisano jako {document_new.file}."
             messages.info(self.request, text)
 
         return redirect("document_detail", document_new.id)
 
 
-class DeleteDocumentView(LoginRequiredMixin, DeleteView):
+class DeleteDocumentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete a document."""
     model = models.Document
     success_url = reverse_lazy("main")
 
+    def test_func(self):
+        return self.request.user.groups.filter(name="manager").exists()
+
 
 class DocumentDetailView(LoginRequiredMixin, View):
+    """Show document's details."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, pk=pk)
         history_set = document.history_set.all().order_by("-changed_at")
@@ -219,6 +225,7 @@ class DocumentDetailView(LoginRequiredMixin, View):
 
 
 class DownloadDocumentView(LoginRequiredMixin, View):
+    """Download a document's file."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
         filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)

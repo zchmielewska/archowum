@@ -27,6 +27,16 @@ def search(phrase):
 
 
 def save_history(data1, data2, user):
+    """
+    Saves history of the changes for documents attributes.
+
+    Checks the following attributes: product, category, validity_start, file.
+
+    :param data1: data dictionary for old document
+    :param data2: data dictionary for new document
+    :param user: user who performs changes
+    :return: None
+    """
     now = timezone.now()
 
     if not data1["product_id"] == data2["product_id"]:

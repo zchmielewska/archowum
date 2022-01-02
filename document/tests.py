@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Group
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 
 from document import models
@@ -173,19 +174,19 @@ class TestAddProductView(TestCase):
         self.client = Client()
 
     def test_get(self):
-        response = self.client.get("/product/add/")
+        response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/login/?next=/product/add/")
+        self.assertEqual(response.url, "/login/?next=/product/add")
 
         user = User.objects.create(username='testuser')
         self.client.force_login(user)
-        response = self.client.get("/product/add/")
+        response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 403)
 
         manager_group = Group.objects.create(name='manager')
         user.groups.add(manager_group)
         self.client.force_login(user)
-        response = self.client.get("/product/add/")
+        response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
@@ -201,7 +202,7 @@ class TestAddProductView(TestCase):
             "name": "Produkt testowy",
             "model": "TEST"
         }
-        response = self.client.post("/product/add/", data)
+        response = self.client.post("/product/add", data)
         self.assertEqual(response.url, "/manage/")
 
         no_products = models.Product.objects.count()
@@ -297,19 +298,19 @@ class TestAddCategoryView(TestCase):
         self.client = Client()
 
     def test_get(self):
-        response = self.client.get("/category/add/")
+        response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/login/?next=/category/add/")
+        self.assertEqual(response.url, "/login/?next=/category/add")
 
         user = User.objects.create(username='testuser')
         self.client.force_login(user)
-        response = self.client.get("/category/add/")
+        response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 403)
 
         manager_group = Group.objects.create(name='manager')
         user.groups.add(manager_group)
         self.client.force_login(user)
-        response = self.client.get("/category/add/")
+        response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
@@ -321,7 +322,7 @@ class TestAddCategoryView(TestCase):
         no_categories = models.Category.objects.count()
         self.assertEqual(no_categories, 0)
 
-        response = self.client.post("/category/add/", {"name": "OWU"})
+        response = self.client.post("/category/add", {"name": "OWU"})
         self.assertEqual(response.url, "/manage/")
 
         no_categories = models.Category.objects.count()
@@ -406,3 +407,160 @@ class TestDeleteCategoryView01(TestCase):
 
         categories = models.Category.objects
         self.assertEqual(categories.count(), 0)
+
+
+class TestAddDocumentView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/document/add")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/document/add")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/document/add")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/document/add")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 5)
+
+        data = {
+            "product": "1",
+            "category": "1",
+            "validity_start": "2022-01-06",
+            "file": SimpleUploadedFile("owu.pdf", b"file_content", content_type="pdf")
+        }
+        response = self.client.post("/document/add", data)
+        self.assertEqual(response.url, "/")
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 6)
+        new_document = documents.get(pk=6)
+        self.assertEqual(new_document.product.name, "Produkt testowy")
+
+
+class TestEditDocumentView03(TestCase):
+    fixtures = ["03.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/document/edit/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/document/edit/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/document/edit/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/document/edit/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 12)
+        document = documents.get(pk=1)
+        self.assertEqual(document.product.name, "Produkt alamakota")
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 0)
+
+        data = {
+            "product": "2",
+            "category": "1",
+            "validity_start": "2022-01-01",
+            "file": SimpleUploadedFile("file1.pdf", b"file_content", content_type="pdf")
+        }
+
+        response = self.client.post("/document/edit/1", data)
+        self.assertEqual(response.url, "/document/1")
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 12)
+        document = documents.get(pk=1)
+        self.assertEqual(document.product.name, "Produkt bartekmapsa")
+
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.document_id, 1)
+        self.assertEqual(history.element, "produkt")
+        self.assertEqual(history.changed_from, str(models.Product.objects.get(pk=1)))
+        self.assertEqual(history.changed_to, str(models.Product.objects.get(pk=2)))
+
+
+class TestDeleteDocumentView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/document/delete/1")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/document/delete/1")
+
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/document/delete/1")
+        self.assertEqual(response.status_code, 403)
+
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+        response = self.client.get("/document/delete/1")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        user = User.objects.create(username='testuser')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 5)
+
+        response = self.client.post("/document/delete/1")
+        self.assertEqual(response.url, "/")
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 4)
+
+
+class TestDocumentDetailView01(TestCase):
+    fixtures = ["01.json"]
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        user = User.objects.create(username='testuser')
+        self.client.force_login(user)
+        response = self.client.get("/document/1")
+        self.assertEqual(response.status_code, 200)
+
+
