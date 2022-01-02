@@ -249,10 +249,16 @@ class RegisterView(View):
         if form.is_valid():
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
+            password2 = form.cleaned_data["password2"]
 
             username_is_taken = username in User.objects.values_list("username", flat=True)
             if username_is_taken:
                 form.add_error("username", "Ta nazwa użytkownika jest już zajęta.")
+                return render(request, "register.html", {"form": form})
+
+            passwords_are_different = password != password2
+            if passwords_are_different:
+                form.add_error("username", "Podane hasła różnią się.")
                 return render(request, "register.html", {"form": form})
 
             user = User.objects.create_user(username=username, email=None, password=password)

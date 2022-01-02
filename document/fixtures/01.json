@@ -1,7 +1,7 @@
 [
   {"model": "document.product", "pk": 1, "fields": {"name": "Produkt testowy", "model": "TEST"}},
   {"model": "document.category", "pk": 1, "fields": {"name": "OWU"}},
-  {"model": "auth.User", "pk": 1, "fields": {"username":  "test_user"}},
+  {"model": "auth.User", "pk": 1, "fields": {"username":  "test_user", "password": "123"}},
 
   {"model": "document.document", "pk": 1,
     "fields": {

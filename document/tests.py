@@ -564,3 +564,60 @@ class TestDocumentDetailView01(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class TestRegisterView(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/register/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        self.assertEqual(User.objects.count(), 0)
+
+        data = {
+            "username": "test_user",
+            "password": "123",
+            "password2": "123"
+        }
+        response = self.client.post("/register/", data)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(response.url, "/")
+
+        response = self.client.post("/register/", data)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(response.status_code, 200)
+
+        data = {
+            "username": "test_user2",
+            "password": "123",
+            "password2": "1234"
+        }
+        response = self.client.post("/register/", data)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(response.status_code, 200)
+
+
+class TestLoginView(TestCase):
+    def test_get(self):
+        response = self.client.get("/login/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        response = self.client.post("/login/", {"username": "test", "password": "test"})
+        self.assertEqual(response.status_code, 200)
+
+        User.objects.create_user(username="test", password="test")
+        response = self.client.post("/login/", {"username": "test", "password": "test"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/")
+
+
+class TestLogout(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_get(self):
+        response = self.client.get("/logout/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/")
