@@ -30,6 +30,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don"t run with debug turned on in production!
 DEBUG = (os.getenv("DEBUG") == "True")
 
+# LOCAL in intranet (files stored in media folder) or CLOUD in internet (files stored in S3 bucket)
+DEPLOYMENT_TYPE = os.getenv("DEPLOYMENT_TYPE", "CLOUD")
+
 ALLOWED_HOSTS = ["127.0.0.1", ".herokuapp.com"]
 
 
@@ -142,7 +145,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = "/static/"
+# STATIC_URL = "/static/"
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
@@ -159,6 +162,17 @@ MEDIA_URL = os.getenv("MEDIA_URL", default="/media/")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_URL = "/login/"
+
+# AWS S3 bucket
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'archowum'
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+
+STATIC_URL = 'https://' + AWS_STORAGE_BUCKET_NAME + '.s3.amazonaws.com/'
+ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 
 # Configure Django App for Heroku.
 django_heroku.settings(locals())

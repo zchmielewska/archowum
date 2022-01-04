@@ -1,6 +1,8 @@
+import boto3
 import mimetypes
 import os
 
+from botocore.exceptions import ClientError
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -11,11 +13,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DeleteView
+from pathlib import Path
 
 from archowum import settings
 from document import models
 from document import forms
 from document.utils import utils
+from archowum.settings import DEPLOYMENT_TYPE
 
 
 class MainView(LoginRequiredMixin, View):
@@ -228,14 +232,26 @@ class DownloadDocumentView(LoginRequiredMixin, View):
     """Download a document's file."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
-        filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
-        if os.path.exists(filepath):
-            with open(filepath, 'rb') as fh:
-                mime_type, _ = mimetypes.guess_type(filepath)
-                response = HttpResponse(fh.read(), content_type=mime_type)
-                response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
-                return response
-        raise Http404
+
+        if DEPLOYMENT_TYPE == "LOCAL":
+            filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
+
+            if os.path.exists(filepath):
+                with open(filepath, 'rb') as fh:
+                    mime_type, _ = mimetypes.guess_type(filepath)
+                    response = HttpResponse(fh.read(), content_type=mime_type)
+                    response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
+                    return response
+            else:
+                raise Http404
+        else:
+            s3 = boto3.client('s3')
+            try:
+                url = s3.generate_presigned_url('get_object', Params={'Bucket': "archowum", 'Key': document.file.name})
+                return redirect(url)
+
+            except ClientError:
+                raise Http404
 
 
 class RegisterView(View):
