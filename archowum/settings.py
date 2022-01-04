@@ -97,15 +97,15 @@ DATABASES = {
 }
 
 # DB configuration used for github workflow
-if os.environ.get('GITHUB_WORKFLOW'):
+if os.environ.get("GITHUB_WORKFLOW"):
     DATABASES = {
-        'default': {
-           'ENGINE': 'django.db.backends.postgresql_psycopg2',
-           'NAME': 'github_actions',
-           'USER': "postgres",
-           'PASSWORD': "postgres",
-           'HOST': 'localhost',
-           'PORT': 5432,
+        "default": {
+           "ENGINE": "django.db.backends.postgresql_psycopg2",
+           "NAME": "github_actions",
+           "USER": "postgres",
+           "PASSWORD": "postgres",
+           "HOST": "localhost",
+           "PORT": 5432,
         }
     }
 
@@ -164,15 +164,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 LOGIN_URL = "/login/"
 
 # AWS S3 bucket
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'archowum'
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
 
-STATIC_URL = 'https://' + AWS_STORAGE_BUCKET_NAME + '.s3.amazonaws.com/'
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
+STATIC_URL = "https://" + AWS_STORAGE_BUCKET_NAME + ".s3.amazonaws.com/"
+ADMIN_MEDIA_PREFIX = STATIC_URL + "admin/"
 
 # Configure Django App for Heroku.
 django_heroku.settings(locals())

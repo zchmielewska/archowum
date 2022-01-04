@@ -217,7 +217,7 @@ class DeleteDocumentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 class DocumentDetailView(LoginRequiredMixin, View):
-    """Show document's details."""
+    """Show document"s details."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, pk=pk)
         history_set = document.history_set.all().order_by("-changed_at")
@@ -229,7 +229,7 @@ class DocumentDetailView(LoginRequiredMixin, View):
 
 
 class DownloadDocumentView(LoginRequiredMixin, View):
-    """Download a document's file."""
+    """Download a document"s file."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
 
@@ -237,17 +237,17 @@ class DownloadDocumentView(LoginRequiredMixin, View):
             filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
 
             if os.path.exists(filepath):
-                with open(filepath, 'rb') as fh:
+                with open(filepath, "rb") as fh:
                     mime_type, _ = mimetypes.guess_type(filepath)
                     response = HttpResponse(fh.read(), content_type=mime_type)
-                    response['Content-Disposition'] = 'inline; filename=' + os.path.basename(filepath)
+                    response["Content-Disposition"] = "inline; filename=" + os.path.basename(filepath)
                     return response
             else:
                 raise Http404
         else:
-            s3 = boto3.client('s3')
+            s3 = boto3.client("s3")
             try:
-                url = s3.generate_presigned_url('get_object', Params={'Bucket': "archowum", 'Key': document.file.name})
+                url = s3.generate_presigned_url("get_object", Params={"Bucket": "archowum", "Key": document.file.name})
                 return redirect(url)
 
             except ClientError:
