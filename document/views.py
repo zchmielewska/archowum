@@ -216,7 +216,7 @@ class DeleteDocumentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 class DocumentDetailView(LoginRequiredMixin, View):
-    """Show document"s details."""
+    """Show document's details."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, pk=pk)
         history_set = document.history_set.all().order_by("-changed_at")
@@ -228,7 +228,7 @@ class DocumentDetailView(LoginRequiredMixin, View):
 
 
 class DownloadDocumentView(LoginRequiredMixin, View):
-    """Download a document"s file."""
+    """Download a document's file."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
 
