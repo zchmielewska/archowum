@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = (os.getenv("DEBUG") == "True")
 
 # LOCAL in intranet (files stored in media folder) or CLOUD in internet (files stored in S3 bucket)
-DEPLOYMENT_TYPE = os.getenv("DEPLOYMENT_TYPE", "CLOUD")
+DEPLOYMENT_TYPE = os.getenv("DEPLOYMENT_TYPE", "LOCAL")
 
 ALLOWED_HOSTS = ["127.0.0.1", ".herokuapp.com"]
 
