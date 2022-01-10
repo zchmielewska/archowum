@@ -155,18 +155,14 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
             validity_start = form.cleaned_data.get("validity_start")
             form_file = form.cleaned_data.get("file")
 
+            # In AWS, user changes duplicated filename manually
             if DEPLOYMENT_TYPE == "AWS":
-                s3 = boto3.resource("s3")
-                bucket = s3.Bucket("archowum")
-                key = str(form_file)
-                objs = list(bucket.objects.filter(Prefix=key))
-                if len(objs) > 0 and objs[0].key == key:
-                    d = models.Document.objects.filter(file=key).first()
-                    if d:
-                        form.add_error("file", f"Plik o tej nazwie już istnieje i jest związany z dokumentem #{d.id}. "
-                                               f"Proszę zmień nazwę pliku.")
-                    else:
-                        form.add_error("file", "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku.")
+                filename = str(form_file)
+                if utils.exists_in_s3(filename):
+                    d = models.Document.objects.filter(file=filename).first()
+                    error_msg = "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku. "
+                    error_msg = error_msg + f"(Powiązany dokument #{d.id})" if d else error_msg
+                    form.add_error("file", error_msg)
                     return render(request, "document_form.html", {"form": form})
 
             document = models.Document.objects.create(
@@ -210,9 +206,19 @@ class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         # Filename after saving might differ from the one uploaded
         document_new = form.save(commit=False)
+        document_old = models.Document.objects.get(id=self.object.id)
+
+        # In AWS, user changes duplicated filename manually
+        if DEPLOYMENT_TYPE == "AWS":
+            filename = str(form_file)
+            if utils.exists_in_s3(filename) and filename != document_old:
+                d = models.Document.objects.filter(file=filename).first()
+                error_msg = "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku. "
+                error_msg = error_msg + f"(Powiązany dokument #{d.id})" if d else error_msg
+                form.add_error("file", error_msg)
+                return render(self.request, "document_update_form.html", {"form": form})
 
         # Filename is converted to None after deletion
-        document_old = models.Document.objects.get(id=document_new.id)
         data_old = document_old.__dict__.copy()
         if self.request.FILES.get("file"):
             document_old.file.delete()
@@ -236,6 +242,7 @@ class DeleteDocumentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Delete a document."""
     model = models.Document
     success_url = reverse_lazy("main")
+    success_message = "Usunięto dokument!"
 
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()

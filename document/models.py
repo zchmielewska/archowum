@@ -1,5 +1,8 @@
+import boto3
 from django.conf import settings
 from django.db import models
+
+from archowum.settings import DEPLOYMENT_TYPE
 
 
 class Product(models.Model):
@@ -55,7 +58,13 @@ class Document(models.Model):
         return self.file.name
 
     def delete(self, *args, **kwargs):
-        self.file.delete()
+        if DEPLOYMENT_TYPE == "AWS":
+            s3 = boto3.resource("s3")
+            s3.Object("archowum", self.file.name).delete()
+        elif DEPLOYMENT_TYPE == "LOCAL":
+            self.file.delete()
+        else:
+            raise ValueError("Incorrect value for DEPLOYMENT_TYPE.")
         super().delete(*args, **kwargs)
 
     class Meta:

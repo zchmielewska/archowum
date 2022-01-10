@@ -1,3 +1,4 @@
+import boto3
 from django.utils import timezone
 
 from document import models
@@ -82,4 +83,10 @@ def save_history(data1, data2, user):
     return None
 
 
+def exists_in_s3(filename):
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket("archowum")
+    key = filename
+    objs = list(bucket.objects.filter(Prefix=key))
+    return len(objs) > 0 and objs[0].key == key
 
