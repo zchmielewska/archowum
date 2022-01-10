@@ -64,7 +64,7 @@ class Document(models.Model):
         elif DEPLOYMENT_TYPE == "LOCAL":
             self.file.delete()
         else:
-            raise ValueError("Incorrect value for DEPLOYMENT_TYPE.")
+            raise ValueError(f"Incorrect value for DEPLOYMENT_TYPE ({DEPLOYMENT_TYPE}).")
         super().delete(*args, **kwargs)
 
     class Meta:

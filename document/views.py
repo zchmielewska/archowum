@@ -284,7 +284,7 @@ class DownloadDocumentView(LoginRequiredMixin, View):
             except ClientError:
                 raise Http404
         else:
-            raise ValueError("Incorrent value for DEPLOYMENT_TYPE.")
+            raise ValueError(f"Incorrent value for DEPLOYMENT_TYPE ({DEPLOYMENT_TYPE}).")
 
 
 class RegisterView(View):
