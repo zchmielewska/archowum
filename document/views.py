@@ -3,6 +3,7 @@ import mimetypes
 import os
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -14,11 +15,9 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DeleteView
 
-from archowum import settings
 from document import models
 from document import forms
 from document.utils import utils
-from archowum.settings import DEPLOYMENT_TYPE
 
 
 class MainView(LoginRequiredMixin, View):
@@ -156,7 +155,7 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
             form_file = form.cleaned_data.get("file")
 
             # In AWS, user changes duplicated filename manually
-            if DEPLOYMENT_TYPE == "AWS":
+            if settings.DEPLOYMENT_TYPE == "AWS":
                 filename = str(form_file)
                 if utils.exists_in_s3(filename):
                     d = models.Document.objects.filter(file=filename).first()
@@ -209,7 +208,7 @@ class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         document_old = models.Document.objects.get(id=self.object.id)
 
         # In AWS, user changes duplicated filename manually
-        if DEPLOYMENT_TYPE == "AWS":
+        if settings.DEPLOYMENT_TYPE == "AWS":
             filename = str(form_file)
             if utils.exists_in_s3(filename) and filename != document_old:
                 d = models.Document.objects.filter(file=filename).first()
@@ -265,7 +264,7 @@ class DownloadDocumentView(LoginRequiredMixin, View):
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
 
-        if DEPLOYMENT_TYPE == "LOCAL":
+        if settings.DEPLOYMENT_TYPE == "LOCAL":
             filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
 
             if os.path.exists(filepath):
@@ -276,15 +275,16 @@ class DownloadDocumentView(LoginRequiredMixin, View):
                     return response
             else:
                 raise Http404
-        elif DEPLOYMENT_TYPE == "AWS":
+        elif settings.DEPLOYMENT_TYPE == "AWS":
             s3 = boto3.client("s3")
             try:
-                url = s3.generate_presigned_url("get_object", Params={"Bucket": "archowum", "Key": document.file.name})
+                url = s3.generate_presigned_url("get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                                                                      "Key": document.file.name})
                 return redirect(url)
             except ClientError:
                 raise Http404
         else:
-            raise ValueError(f"Incorrent value for DEPLOYMENT_TYPE ({DEPLOYMENT_TYPE}).")
+            raise ValueError(f"Incorrent value for DEPLOYMENT_TYPE ({settings.DEPLOYMENT_TYPE}).")
 
 
 class RegisterView(View):

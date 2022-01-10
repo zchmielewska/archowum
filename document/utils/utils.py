@@ -89,4 +89,3 @@ def exists_in_s3(filename):
     key = filename
     objs = list(bucket.objects.filter(Prefix=key))
     return len(objs) > 0 and objs[0].key == key
-
