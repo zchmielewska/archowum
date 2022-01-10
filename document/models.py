@@ -1,3 +1,4 @@
+import boto3
 from django.conf import settings
 from django.db import models
 
@@ -55,7 +56,13 @@ class Document(models.Model):
         return self.file.name
 
     def delete(self, *args, **kwargs):
-        self.file.delete()
+        if settings.DEPLOYMENT_TYPE == "AWS":
+            s3 = boto3.resource("s3")
+            s3.Object(settings.AWS_STORAGE_BUCKET_NAME, self.file.name).delete()
+        elif settings.DEPLOYMENT_TYPE == "LOCAL":
+            self.file.delete()
+        else:
+            raise ValueError(f"Incorrect value for DEPLOYMENT_TYPE ({settings.DEPLOYMENT_TYPE}).")
         super().delete(*args, **kwargs)
 
     class Meta:
