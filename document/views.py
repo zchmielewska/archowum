@@ -129,7 +129,17 @@ class DeleteCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
 
 
 class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
-    """Add a new document."""
+    """
+    Add a new document.
+
+    The behaviour differs between LOCAL and AWS deployment types.
+
+    If the deployment type is LOCAL, django handles duplicates filenames
+    and when a file with already existent filename get added, django adds a random string to the filename.
+
+    If the deployment type is AWS, there is no support for the duplicated filenames.
+    User gets an error and is asked to change the filename.
+    """
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
 
@@ -144,6 +154,21 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
             category = form.cleaned_data.get("category")
             validity_start = form.cleaned_data.get("validity_start")
             form_file = form.cleaned_data.get("file")
+
+            if DEPLOYMENT_TYPE == "AWS":
+                s3 = boto3.resource("s3")
+                bucket = s3.Bucket("archowum")
+                key = str(form_file)
+                objs = list(bucket.objects.filter(Prefix=key))
+                if len(objs) > 0 and objs[0].key == key:
+                    d = models.Document.objects.filter(file=key).first()
+                    if d:
+                        form.add_error("file", f"Plik o tej nazwie już istnieje i jest związany z dokumentem #{d.id}. "
+                                               f"Proszę zmień nazwę pliku.")
+                    else:
+                        form.add_error("file", "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku.")
+                    return render(request, "document_form.html", {"form": form})
+
             document = models.Document.objects.create(
                 product=product,
                 category=category,
@@ -151,12 +176,11 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
                 file=form_file,
                 created_by=request.user,
             )
-            messages.success(request, "Dodano nowy dokument!")
-
             if document.file != form_file:
                 text = f"Plik o nazwie {form_file} już istnieje. Przesłany plik zapisano jako {document.file}."
                 messages.info(request, text)
 
+            messages.success(request, "Dodano nowy dokument!")
             return redirect("main")
 
         return render(request, "document_form.html", {"form": form})
@@ -164,9 +188,9 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
-    Edit an existing document.
+    Edit an existing document and save history of the changes made to the document.
 
-    Save history of the changes made to the document.
+    The behaviour differs between LOCAL and AWS deployment types in respect to the duplicated filenames.
     """
     model = models.Document
     template_name_suffix = "_update_form"
@@ -181,8 +205,10 @@ class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return initial
 
     def form_valid(self, form):
-        # Filename after saving might differ from the one uploaded
+        # Form contains the filename delivered by the user
         form_file = form.cleaned_data.get("file")
+
+        # Filename after saving might differ from the one uploaded
         document_new = form.save(commit=False)
 
         # Filename is converted to None after deletion
@@ -243,14 +269,15 @@ class DownloadDocumentView(LoginRequiredMixin, View):
                     return response
             else:
                 raise Http404
-        else:
+        elif DEPLOYMENT_TYPE == "AWS":
             s3 = boto3.client("s3")
             try:
                 url = s3.generate_presigned_url("get_object", Params={"Bucket": "archowum", "Key": document.file.name})
                 return redirect(url)
-
             except ClientError:
                 raise Http404
+        else:
+            raise ValueError("Incorrent value for DEPLOYMENT_TYPE.")
 
 
 class RegisterView(View):
