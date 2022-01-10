@@ -31,6 +31,7 @@ jobs:
       DATABASE_PASSWORD: 'postgres'
       DATABASE_HOST: 'localhost'
       DATABASE_PORT: 5432
+      DEPLOYMENT_TYPE_DEV: 'LOCAL'
 
     steps:
     - uses: actions/checkout@v2
