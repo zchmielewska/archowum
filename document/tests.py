@@ -1,21 +1,34 @@
+import os
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
+from unittest import mock
 
 from document import models
 
 
-class TestMainView(TestCase):
+class ExtendedTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
+    def log_user(self):
+        user = User.objects.create(username='user123')
+        self.client.force_login(user)
+
+    def log_manager(self):
+        user = User.objects.create(username='manager456')
+        manager_group = Group.objects.create(name='manager')
+        user.groups.add(manager_group)
+        self.client.force_login(user)
+
+
+class TestMainView(ExtendedTestCase):
     def test_get(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
 
@@ -24,30 +37,23 @@ class TestMainView(TestCase):
         self.assertEqual(response.context.get("no_documents"), 0)
 
 
-class TestMainView01(TestCase):
+class TestMainView01(ExtendedTestCase):
     fixtures = ["01.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
+
         response = self.client.get("/")
         self.assertEqual(len(response.context.get("documents")), 5)
         self.assertEqual(response.context.get("no_documents"), 5)
         self.assertEqual(response.context.get("documents").first().id, 5)
 
 
-class TestMainView02(TestCase):
+class TestMainView02(ExtendedTestCase):
     fixtures = ["02.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
 
         response = self.client.get("/")
         self.assertEqual(len(response.context.get("documents")), 10)
@@ -61,15 +67,11 @@ class TestMainView02(TestCase):
         self.assertEqual(response.context.get("documents").first().id, 12)
 
 
-class TestMainView03(TestCase):
+class TestMainView03(ExtendedTestCase):
     fixtures = ["03.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
 
         response = self.client.get("/search/?phrase=alamakota")
         self.assertEqual(response.context.get("no_documents"), 6)
@@ -104,39 +106,29 @@ class TestMainView03(TestCase):
         self.assertEqual(response.context.get("documents").first().id, 12)
 
 
-class TestManageView(TestCase):
-    def setUp(self):
-        self.client = Client()
-
+class TestManageView(ExtendedTestCase):
     def test_get(self):
-        response = self.client.get("/")
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, "/login/?next=/")
-
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
         response = self.client.get("/manage/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/manage/")
 
+        self.log_user()
+        response = self.client.get("/manage/")
+        self.assertEqual(response.status_code, 403)
+
+        self.log_manager()
+        response = self.client.get("/manage/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context.get("products")), 0)
         self.assertEqual(len(response.context.get("categories")), 0)
 
 
-class TestManageView02(TestCase):
+class TestManageView02(ExtendedTestCase):
     fixtures = ["02.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/manage/")
-
         products = response.context.get("products")
         categories = response.context.get("categories")
         product = products[0]
@@ -148,19 +140,12 @@ class TestManageView02(TestCase):
         self.assertEqual(category.name, "OWU")
 
 
-class TestManageView03(TestCase):
+class TestManageView03(ExtendedTestCase):
     fixtures = ["03.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/manage/")
-
         products = response.context.get("products")
         categories = response.context.get("categories")
         self.assertEqual(len(products), 2)
@@ -169,34 +154,29 @@ class TestManageView03(TestCase):
         self.assertEqual(categories.first().id, 1)
 
 
-class TestAddProductView(TestCase):
-    def setUp(self):
-        self.client = Client()
-
+class TestAddProductView(ExtendedTestCase):
     def test_get(self):
         response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/product/add")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/product/add")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
 
         no_products = models.Product.objects.count()
         self.assertEqual(no_products, 0)
+
+        response = self.client.get("/manage/")
+        products = response.context.get("products")
+        self.assertEqual(len(products), 0)
 
         data = {
             "name": "Produkt testowy",
@@ -209,26 +189,24 @@ class TestAddProductView(TestCase):
         self.assertEqual(no_products, 1)
         self.assertEqual(models.Product.objects.first().name, "Produkt testowy")
 
+        response = self.client.get("/manage/")
+        products = response.context.get("products")
+        self.assertEqual(len(products), 1)
 
-class TestEditProductView01(TestCase):
+
+class TestEditProductView01(ExtendedTestCase):
     fixtures = ["01.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/product/edit/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/product/edit/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/product/edit/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/product/edit/1")
         self.assertEqual(response.status_code, 200)
 
@@ -254,34 +232,24 @@ class TestEditProductView01(TestCase):
         self.assertEqual(products.first().model, "TOST")
 
 
-class TestDeleteProductView01(TestCase):
+class TestDeleteProductView01(ExtendedTestCase):
     fixtures = ["01.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/product/delete/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/product/delete/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/product/delete/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/product/delete/1")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
+        self.log_manager()
         products = models.Product.objects
         self.assertEqual(products.count(), 1)
         self.assertEqual(products.first().model, "TEST")
@@ -293,32 +261,22 @@ class TestDeleteProductView01(TestCase):
         self.assertEqual(products.count(), 0)
 
 
-class TestAddCategoryView(TestCase):
-    def setUp(self):
-        self.client = Client()
-
+class TestAddCategoryView(ExtendedTestCase):
     def test_get(self):
         response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/category/add")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/category/add")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
+        self.log_manager()
         no_categories = models.Category.objects.count()
         self.assertEqual(no_categories, 0)
 
@@ -330,34 +288,24 @@ class TestAddCategoryView(TestCase):
         self.assertEqual(models.Category.objects.first().name, "OWU")
 
 
-class TestEditCategoryView01(TestCase):
+class TestEditCategoryView01(ExtendedTestCase):
     fixtures = ["01.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/category/edit/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/category/edit/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/category/edit/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/category/edit/1")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
+        self.log_manager()
         categories = models.Category.objects
         self.assertEqual(categories.count(), 1)
         self.assertEqual(categories.first().name, "OWU")
@@ -370,33 +318,24 @@ class TestEditCategoryView01(TestCase):
         self.assertEqual(categories.first().name, "UFO")
 
 
-class TestDeleteCategoryView01(TestCase):
+class TestDeleteCategoryView01(ExtendedTestCase):
     fixtures = ["01.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/category/delete/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/category/delete/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/category/delete/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/category/delete/1")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
 
         categories = models.Category.objects
         self.assertEqual(categories.count(), 1)
@@ -409,7 +348,7 @@ class TestDeleteCategoryView01(TestCase):
         self.assertEqual(categories.count(), 0)
 
 
-class TestAddDocumentView01(TestCase):
+class TestAddDocumentView01(ExtendedTestCase):
     fixtures = ["01.json"]
 
     def setUp(self):
@@ -420,18 +359,15 @@ class TestAddDocumentView01(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/document/add")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/document/add")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/document/add")
         self.assertEqual(response.status_code, 200)
 
-    def test_post(self):
+    def post(self):
         user = User.objects.create(username='testuser')
         manager_group = Group.objects.create(name='manager')
         user.groups.add(manager_group)
@@ -453,7 +389,26 @@ class TestAddDocumentView01(TestCase):
         new_document = documents.get(pk=6)
         self.assertEqual(new_document.product.name, "Produkt testowy")
 
+    @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "LOCAL"})
+    def test_post_local(self):
+        self.post()
 
+    # def tearDown(self):
+    #     new_document = models.Document.objects.get(pk=6)
+    #     new_document.delete()
+
+    # @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
+    # def test_post_aws(self):
+    #     self.post()
+
+
+#
+# def test_post_local(self):
+#     self.post()
+#
+# @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
+# def test_post_aws(self):
+#     self.post()
 class TestEditDocumentView03(TestCase):
     fixtures = ["03.json"]
 
@@ -621,3 +576,4 @@ class TestLogout(TestCase):
         response = self.client.get("/logout/")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
+

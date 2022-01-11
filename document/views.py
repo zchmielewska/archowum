@@ -132,13 +132,9 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
     """
     Add a new document.
 
-    The behaviour differs between LOCAL and AWS deployment types.
-
-    If the deployment type is LOCAL, django handles duplicates filenames
-    and when a file with already existent filename get added, django adds a random string to the filename.
-
-    If the deployment type is AWS, there is no support for the duplicated filenames.
-    User gets an error and is asked to change the filename.
+    If the deployment type is LOCAL, file gets saved on the local machine.
+    If the deployment type is AWS, file gets saved in the S3 bucket.
+    LOCAL handles duplicated filenames by adding random string and AWS doesn't allow for duplicated filenames.
     """
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
