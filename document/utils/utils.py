@@ -1,4 +1,5 @@
 import boto3
+from django.conf import settings
 from django.utils import timezone
 
 from document import models
@@ -84,8 +85,14 @@ def save_history(data1, data2, user):
 
 
 def exists_in_s3(filename):
+    """
+    Check if the file exists in the bucket.
+
+    :param filename: string, name of the file
+    :return: boolean
+    """
     s3 = boto3.resource("s3")
-    bucket = s3.Bucket("archowum")
+    bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
     key = filename
     objs = list(bucket.objects.filter(Prefix=key))
     return len(objs) > 0 and objs[0].key == key
