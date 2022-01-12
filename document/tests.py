@@ -351,9 +351,6 @@ class TestDeleteCategoryView01(ExtendedTestCase):
 class TestAddDocumentView01(ExtendedTestCase):
     fixtures = ["01.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
         response = self.client.get("/document/add")
         self.assertEqual(response.status_code, 302)
@@ -368,11 +365,7 @@ class TestAddDocumentView01(ExtendedTestCase):
         self.assertEqual(response.status_code, 200)
 
     def post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
+        self.log_manager()
         documents = models.Document.objects
         self.assertEqual(documents.count(), 5)
 
@@ -386,71 +379,51 @@ class TestAddDocumentView01(ExtendedTestCase):
         self.assertEqual(response.url, "/")
         documents = models.Document.objects
         self.assertEqual(documents.count(), 6)
-        new_document = documents.get(pk=6)
+        new_document = documents.last()
         self.assertEqual(new_document.product.name, "Produkt testowy")
+        new_document.delete()
 
     @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "LOCAL"})
     def test_post_local(self):
         self.post()
 
-    # def tearDown(self):
-    #     new_document = models.Document.objects.get(pk=6)
-    #     new_document.delete()
-
-    # @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
-    # def test_post_aws(self):
-    #     self.post()
+    @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
+    def test_post_aws(self):
+        self.post()
 
 
-#
-# def test_post_local(self):
-#     self.post()
-#
-# @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
-# def test_post_aws(self):
-#     self.post()
-class TestEditDocumentView03(TestCase):
+class TestEditDocumentView03(ExtendedTestCase):
     fixtures = ["03.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/document/edit/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/document/edit/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/document/edit/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/document/edit/1")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
+        self.log_manager()
         documents = models.Document.objects
         self.assertEqual(documents.count(), 12)
         document = documents.get(pk=1)
         self.assertEqual(document.product.name, "Produkt alamakota")
-        histories = models.History.objects
-        self.assertEqual(histories.count(), 0)
+        self.assertEqual(models.History.objects.count(), 0)
 
+    def test_post_edit_product_of_document01(self):
+        self.log_manager()
         data = {
             "product": "2",
             "category": "1",
             "validity_start": "2022-01-01",
             "file": SimpleUploadedFile("file1.pdf", b"file_content", content_type="pdf")
         }
-
         response = self.client.post("/document/edit/1", data)
         self.assertEqual(response.url, "/document/1")
 
@@ -466,6 +439,69 @@ class TestEditDocumentView03(TestCase):
         self.assertEqual(history.element, "produkt")
         self.assertEqual(history.changed_from, str(models.Product.objects.get(pk=1)))
         self.assertEqual(history.changed_to, str(models.Product.objects.get(pk=2)))
+        document.delete()
+
+    def test_post_edit_file_of_document02(self):
+        self.log_manager()
+        data = {
+            "product": "1",
+            "category": "2",
+            "validity_start": "2022-01-02",
+            "file": SimpleUploadedFile("file999.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/edit/2", data)
+        document = models.Document.objects.get(pk=2)
+        self.assertEqual(document.file.name, "file999.pdf")
+
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.document_id, 2)
+        self.assertEqual(history.element, "plik")
+        self.assertEqual(history.changed_from, "file2.pdf")
+        self.assertEqual(history.changed_to, "file999.pdf")
+
+        document.delete()
+
+    def test_post_edit_without_changes_document03(self):
+        self.log_manager()
+        document_before_edit = models.Document.objects.get(pk=3)
+        data = {
+            "product": "1",
+            "category": "1",
+            "validity_start": "2022-01-03",
+            "file": SimpleUploadedFile("file3.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/edit/3", data)
+        document_after_edit = models.Document.objects.get(pk=3)
+        self.assertEqual(document_before_edit, document_after_edit)
+        self.assertEqual(models.History.objects.count(), 0)
+        document_after_edit.delete()
+
+    def test_post_edit_file_with_duplicated_filename_of_document04(self):
+        self.log_manager()
+        # Duplicated filenames get checked by django on the disk
+        open("media/file12.pdf", "x")
+        data = {
+            "product": "1",
+            "category": "2",
+            "validity_start": "2022-01-04",
+            "file": SimpleUploadedFile("file12.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/edit/4", data)
+        document = models.Document.objects.get(pk=4)
+        self.assertNotEqual(document.file.name, "file12.pdf")
+
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.document_id, 4)
+        self.assertEqual(history.element, "plik")
+        self.assertEqual(history.changed_from, "file4.pdf")
+        self.assertNotEqual(history.changed_to, "file12.pdf")
+
+        os.remove("media/file12.pdf")
+        document.delete()
 
 
 class TestDeleteDocumentView01(TestCase):
