@@ -1,5 +1,3 @@
-import boto3
-from django.conf import settings
 from django.utils import timezone
 
 from document import models
@@ -84,15 +82,25 @@ def save_history(data1, data2, user):
     return None
 
 
-def exists_in_s3(filename):
+def get_filename_msg(document, sent_filename):
     """
-    Check if the file exists in the bucket.
+    Get informational message about the changes to the filename.
 
-    :param filename: string, name of the file
-    :return: boolean
+    :param document: document object that has been created
+    :param sent_filename: string, filename sent in the form
+    :return: string, message
     """
-    s3 = boto3.resource("s3")
-    bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
-    key = filename
-    objs = list(bucket.objects.filter(Prefix=key))
-    return len(objs) > 0 and objs[0].key == key
+    saved_filename = document.file
+    text = f"Przesłany plik zapisano jako {saved_filename}."
+
+    cleaned_sent_filename = sent_filename.replace(" ", "_")
+    if models.Document.objects.filter(file=cleaned_sent_filename).exists():
+        doc_same_filename = models.Document.objects.get(file=cleaned_sent_filename)
+        if doc_same_filename != document:
+            text += f" Plik o nazwie {cleaned_sent_filename} jest już związany " \
+                    f"z dokumentem #{doc_same_filename.id}."
+
+    if " " in sent_filename:
+        text += " Spacje zmieniono na podkreślenia."
+
+    return text

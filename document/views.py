@@ -1,9 +1,5 @@
-import boto3
 import mimetypes
 import os
-
-from botocore.client import Config
-from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
@@ -131,10 +127,6 @@ class DeleteCategoryView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
 class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
     """
     Add a new document.
-
-    If the deployment type is LOCAL, file gets saved on the local machine.
-    If the deployment type is AWS, file gets saved in the S3 bucket.
-    LOCAL handles duplicated filenames by adding random string and AWS doesn't allow for duplicated filenames.
     """
     def test_func(self):
         return self.request.user.groups.filter(name="manager").exists()
@@ -151,16 +143,6 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
             validity_start = form.cleaned_data.get("validity_start")
             form_file = form.cleaned_data.get("file")
 
-            # In AWS, user changes duplicated filename manually
-            if settings.DEPLOYMENT_TYPE == "AWS":
-                filename = str(form_file)
-                if utils.exists_in_s3(filename):
-                    d = models.Document.objects.filter(file=filename).first()
-                    error_msg = "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku. "
-                    error_msg = error_msg + f"(Powiązany dokument #{d.id})" if d else error_msg
-                    form.add_error("file", error_msg)
-                    return render(request, "document_form.html", {"form": form})
-
             document = models.Document.objects.create(
                 product=product,
                 category=category,
@@ -169,7 +151,7 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
                 created_by=request.user,
             )
             if document.file != form_file:
-                text = f"Plik o nazwie {form_file} już istnieje. Przesłany plik zapisano jako {document.file}."
+                text = utils.get_filename_msg(document, sent_filename=form_file.name)
                 messages.info(request, text)
 
             messages.success(request, "Dodano nowy dokument!")
@@ -181,8 +163,6 @@ class AddDocumentView(LoginRequiredMixin, UserPassesTestMixin, View):
 class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
     Edit an existing document and save history of the changes made to the document.
-
-    The behaviour differs between LOCAL and AWS deployment types in respect to the duplicated filenames.
     """
     model = models.Document
     template_name_suffix = "_update_form"
@@ -204,16 +184,6 @@ class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         document_new = form.save(commit=False)
         document_old = models.Document.objects.get(id=self.object.id)
 
-        # In AWS, user changes duplicated filename manually
-        if settings.DEPLOYMENT_TYPE == "AWS":
-            filename = str(form_file)
-            if utils.exists_in_s3(filename) and filename != document_old:
-                d = models.Document.objects.filter(file=filename).first()
-                error_msg = "Plik o tej nazwie już istnieje. Proszę zmień nazwę pliku. "
-                error_msg = error_msg + f"(Powiązany dokument #{d.id})" if d else error_msg
-                form.add_error("file", error_msg)
-                return render(self.request, "document_update_form.html", {"form": form})
-
         # Filename is converted to None after deletion
         data_old = document_old.__dict__.copy()
         if self.request.FILES.get("file"):
@@ -228,7 +198,7 @@ class EditDocumentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         # Other documents might use the file with the same name
         if document_new.file != form_file:
-            text = f"Plik o nazwie {form_file} już istnieje. Przesłany plik zapisano jako {document_new.file}."
+            text = utils.get_filename_msg(document_new, sent_filename=form_file.name)
             messages.info(self.request, text)
 
         return redirect("document_detail", document_new.id)
@@ -260,35 +230,15 @@ class DownloadDocumentView(LoginRequiredMixin, View):
     """Download a document's file."""
     def get(self, request, pk):
         document = get_object_or_404(models.Document, id=pk)
-
-        if settings.DEPLOYMENT_TYPE == "LOCAL":
-            filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
-
-            if os.path.exists(filepath):
-                with open(filepath, "rb") as fh:
-                    mime_type, _ = mimetypes.guess_type(filepath)
-                    response = HttpResponse(fh.read(), content_type=mime_type)
-                    response["Content-Disposition"] = "inline; filename=" + os.path.basename(filepath)
-                    return response
-            else:
-                raise Http404
-        elif settings.DEPLOYMENT_TYPE == "AWS":
-            s3 = boto3.resource(
-                's3',
-                region_name=settings.AWS_S3_REGION_NAME,
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                config=Config(signature_version=settings.AWS_S3_SIGNATURE_VERSION),
-            )
-            try:
-                url = s3.meta.client.generate_presigned_url("get_object",
-                                                            Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-                                                                    "Key": document.file.name})
-                return redirect(url)
-            except ClientError:
-                raise Http404
+        filepath = os.path.join(settings.MEDIA_ROOT, document.file.name)
+        if os.path.exists(filepath):
+            with open(filepath, "rb") as fh:
+                mime_type, _ = mimetypes.guess_type(filepath)
+                response = HttpResponse(fh.read(), content_type=mime_type)
+                response["Content-Disposition"] = "inline; filename=" + os.path.basename(filepath)
+                return response
         else:
-            raise ValueError(f"Incorrent value for DEPLOYMENT_TYPE ({settings.DEPLOYMENT_TYPE}).")
+            raise Http404
 
 
 class RegisterView(View):

@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-import django_heroku
 import os
 
 from dotenv import load_dotenv
@@ -29,10 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don"t run with debug turned on in production!
 DEBUG = (os.getenv("DEBUG") == "True")
 
-# LOCAL in intranet (files stored in media folder) or CLOUD in internet (files stored in S3 bucket)
-DEPLOYMENT_TYPE = os.getenv("DEPLOYMENT_TYPE", "LOCAL")
-
-ALLOWED_HOSTS = ["127.0.0.1", ".herokuapp.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "archowum.pythonanywhere.com"]
 
 
 # Application definition
@@ -87,11 +83,8 @@ WSGI_APPLICATION = "archowum.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "archowum",
-        "HOST": "127.0.0.1",
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -143,13 +136,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
+
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
-
-# Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (
-    os.path.join(STATIC_ROOT, "static"),
-)
 
 
 # Default primary key field type
@@ -162,19 +151,3 @@ MEDIA_URL = os.getenv("MEDIA_URL", default="/media/")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_URL = "/login/"
-
-# AWS S3 bucket
-if DEPLOYMENT_TYPE == "AWS":
-    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
-    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
-    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
-    AWS_S3_SIGNATURE_VERSION = os.environ.get("AWS_S3_SIGNATURE_VERSION", "")
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
-    STATIC_URL = "https://" + AWS_STORAGE_BUCKET_NAME + ".s3.amazonaws.com/"
-
-ADMIN_MEDIA_PREFIX = STATIC_URL + "admin/"
-
-# Configure Django App for Heroku.
-django_heroku.settings(locals())

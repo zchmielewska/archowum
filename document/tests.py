@@ -1,8 +1,8 @@
+import datetime
 import os
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
-from unittest import mock
 
 from document import models
 
@@ -364,7 +364,7 @@ class TestAddDocumentView01(ExtendedTestCase):
         response = self.client.get("/document/add")
         self.assertEqual(response.status_code, 200)
 
-    def post(self):
+    def test_post(self):
         self.log_manager()
         documents = models.Document.objects
         self.assertEqual(documents.count(), 5)
@@ -379,17 +379,54 @@ class TestAddDocumentView01(ExtendedTestCase):
         self.assertEqual(response.url, "/")
         documents = models.Document.objects
         self.assertEqual(documents.count(), 6)
-        new_document = documents.last()
-        self.assertEqual(new_document.product.name, "Produkt testowy")
-        new_document.delete()
+        document = documents.last()
+        self.assertEqual(document.product.name, "Produkt testowy")
+        self.assertEqual(document.file.name, "owu.pdf")
+        document.delete()
 
-    @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "LOCAL"})
-    def test_post_local(self):
-        self.post()
+    def test_post_add_document_with_duplicated_filename(self):
+        open("media/file1.pdf", "x")
+        self.log_manager()
+        self.assertEqual(models.Document.objects.count(), 5)
+        data = {
+            "product": "1",
+            "category": "1",
+            "validity_start": "2022-01-06",
+            "file": SimpleUploadedFile("file1.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/add", data)
+        self.assertEqual(models.Document.objects.count(), 6)
+        document = models.Document.objects.last()
+        self.assertNotEqual(document.file.name, "file1.pdf")
+        document.delete()
+        os.remove("media/file1.pdf")
 
-    @mock.patch.dict(os.environ, {"DEPLOYMENT_TYPE": "AWS"})
-    def test_post_aws(self):
-        self.post()
+    def test_post_add_document_with_filename_with_spaces(self):
+        self.log_manager()
+        self.assertEqual(models.Document.objects.count(), 5)
+        data = {
+            "product": "1",
+            "category": "1",
+            "validity_start": "2022-01-06",
+            "file": SimpleUploadedFile("file 1.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/add", data)
+        self.assertEqual(models.Document.objects.count(), 6)
+        document = models.Document.objects.last()
+        self.assertEqual(document.file.name, "file_1.pdf")
+        document.delete()
+
+    def test_post_add_document_with_duplicated_metadata(self):
+        self.log_manager()
+        self.assertEqual(models.Document.objects.count(), 5)
+        data = {
+            "product": "1",
+            "category": "1",
+            "validity_start": "2022-01-01",
+            "file": SimpleUploadedFile("file999.pdf", b"file_content", content_type="pdf")
+        }
+        self.client.post("/document/add", data)
+        self.assertEqual(models.Document.objects.count(), 5)
 
 
 class TestEditDocumentView03(ExtendedTestCase):
@@ -416,13 +453,14 @@ class TestEditDocumentView03(ExtendedTestCase):
         self.assertEqual(document.product.name, "Produkt alamakota")
         self.assertEqual(models.History.objects.count(), 0)
 
-    def test_post_edit_product_of_document01(self):
+    def test_post_edit_document01_change_product(self):
         self.log_manager()
+        document = models.Document.objects.get(pk=1)
         data = {
             "product": "2",
-            "category": "1",
-            "validity_start": "2022-01-01",
-            "file": SimpleUploadedFile("file1.pdf", b"file_content", content_type="pdf")
+            "category": document.category.id,
+            "validity_start": document.validity_start,
+            "file": document.file.name
         }
         response = self.client.post("/document/edit/1", data)
         self.assertEqual(response.url, "/document/1")
@@ -441,12 +479,13 @@ class TestEditDocumentView03(ExtendedTestCase):
         self.assertEqual(history.changed_to, str(models.Product.objects.get(pk=2)))
         document.delete()
 
-    def test_post_edit_file_of_document02(self):
+    def test_post_edit_document02_change_file(self):
         self.log_manager()
+        document = models.Document.objects.get(pk=2)
         data = {
-            "product": "1",
-            "category": "2",
-            "validity_start": "2022-01-02",
+            "product": document.product.id,
+            "category": document.category.id,
+            "validity_start": document.validity_start,
             "file": SimpleUploadedFile("file999.pdf", b"file_content", content_type="pdf")
         }
         self.client.post("/document/edit/2", data)
@@ -460,10 +499,9 @@ class TestEditDocumentView03(ExtendedTestCase):
         self.assertEqual(history.element, "plik")
         self.assertEqual(history.changed_from, "file2.pdf")
         self.assertEqual(history.changed_to, "file999.pdf")
-
         document.delete()
 
-    def test_post_edit_without_changes_document03(self):
+    def test_post_edit_document03_no_changes(self):
         self.log_manager()
         document_before_edit = models.Document.objects.get(pk=3)
         data = {
@@ -478,14 +516,14 @@ class TestEditDocumentView03(ExtendedTestCase):
         self.assertEqual(models.History.objects.count(), 0)
         document_after_edit.delete()
 
-    def test_post_edit_file_with_duplicated_filename_of_document04(self):
+    def test_post_edit_document04_change_file_with_duplicated_filename(self):
         self.log_manager()
-        # Duplicated filenames get checked by django on the disk
         open("media/file12.pdf", "x")
+        document = models.Document.objects.get(pk=4)
         data = {
-            "product": "1",
-            "category": "2",
-            "validity_start": "2022-01-04",
+            "product": document.product.id,
+            "category": document.category.id,
+            "validity_start": document.validity_start,
             "file": SimpleUploadedFile("file12.pdf", b"file_content", content_type="pdf")
         }
         self.client.post("/document/edit/4", data)
@@ -499,73 +537,116 @@ class TestEditDocumentView03(ExtendedTestCase):
         self.assertEqual(history.element, "plik")
         self.assertEqual(history.changed_from, "file4.pdf")
         self.assertNotEqual(history.changed_to, "file12.pdf")
-
         os.remove("media/file12.pdf")
         document.delete()
 
+    def test_post_edit_document05_change_category(self):
+        self.log_manager()
+        document = models.Document.objects.get(pk=5)
+        data = {
+            "product": document.product.id,
+            "category": "2",
+            "validity_start": document.validity_start,
+            "file": document.file.name
+        }
+        response = self.client.post("/document/edit/5", data)
+        self.assertEqual(response.url, "/document/5")
 
-class TestDeleteDocumentView01(TestCase):
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 12)
+        document = documents.get(pk=5)
+        self.assertEqual(document.category.name, "SWU")
+
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.document_id, 5)
+        self.assertEqual(history.element, "kategoria dokumentu")
+        self.assertEqual(history.changed_from, "OWU")
+        self.assertEqual(history.changed_to, "SWU")
+        document.delete()
+
+    def test_post_edit_document06_change_valid_from(self):
+        self.log_manager()
+        document = models.Document.objects.get(pk=6)
+        data = {
+            "product": document.product.id,
+            "category": document.category.id,
+            "validity_start": "1989-09-21",
+            "file": document.file.name
+        }
+        response = self.client.post("/document/edit/6", data)
+        self.assertEqual(response.url, "/document/6")
+
+        documents = models.Document.objects
+        self.assertEqual(documents.count(), 12)
+        document = documents.get(pk=6)
+        self.assertEqual(document.validity_start, datetime.date(1989, 9, 21))
+
+        histories = models.History.objects
+        self.assertEqual(histories.count(), 1)
+        history = histories.first()
+        self.assertEqual(history.document_id, 6)
+        self.assertEqual(history.element, "ważny od")
+        self.assertEqual(history.changed_from, "2022-01-06")
+        self.assertEqual(history.changed_to, "1989-09-21")
+        document.delete()
+
+
+class TestDeleteDocumentView01(ExtendedTestCase):
     fixtures = ["01.json"]
-
-    def setUp(self):
-        self.client = Client()
 
     def test_get(self):
         response = self.client.get("/document/delete/1")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/login/?next=/document/delete/1")
 
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/document/delete/1")
         self.assertEqual(response.status_code, 403)
 
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
+        self.log_manager()
         response = self.client.get("/document/delete/1")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
-        user = User.objects.create(username='testuser')
-        manager_group = Group.objects.create(name='manager')
-        user.groups.add(manager_group)
-        self.client.force_login(user)
-
-        documents = models.Document.objects
-        self.assertEqual(documents.count(), 5)
-
+        self.log_manager()
+        self.assertEqual(models.Document.objects.count(), 5)
         response = self.client.post("/document/delete/1")
         self.assertEqual(response.url, "/")
-
-        documents = models.Document.objects
-        self.assertEqual(documents.count(), 4)
+        self.assertEqual(models.Document.objects.count(), 4)
 
 
-class TestDocumentDetailView01(TestCase):
+class TestDocumentDetailView01(ExtendedTestCase):
     fixtures = ["01.json"]
 
-    def setUp(self):
-        self.client = Client()
-
     def test_get(self):
-        user = User.objects.create(username='testuser')
-        self.client.force_login(user)
+        self.log_user()
         response = self.client.get("/document/1")
         self.assertEqual(response.status_code, 200)
 
 
-class TestRegisterView(TestCase):
-    def setUp(self):
-        self.client = Client()
+class TestDownloadDocumentView01(ExtendedTestCase):
+    fixtures = ["01.json"]
 
+    def test_get(self):
+        self.log_user()
+        response = self.client.get("/download/1")
+        self.assertEqual(response.status_code, 404)
+
+        open("media/file1.pdf", "x")
+        response = self.client.get("/download/1")
+        self.assertEqual(response.status_code, 200)
+        os.remove("media/file1.pdf")
+
+
+class TestRegisterView(ExtendedTestCase):
     def test_get(self):
         response = self.client.get("/register/")
         self.assertEqual(response.status_code, 200)
 
     def test_post(self):
         self.assertEqual(User.objects.count(), 0)
-
         data = {
             "username": "test_user",
             "password": "123",
@@ -589,7 +670,7 @@ class TestRegisterView(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class TestLoginView(TestCase):
+class TestLoginView(ExtendedTestCase):
     def test_get(self):
         response = self.client.get("/login/")
         self.assertEqual(response.status_code, 200)
@@ -604,12 +685,9 @@ class TestLoginView(TestCase):
         self.assertEqual(response.url, "/")
 
 
-class TestLogout(TestCase):
-    def setUp(self):
-        self.client = Client()
-
+class TestLogout(ExtendedTestCase):
     def test_get(self):
+        self.log_user()
         response = self.client.get("/logout/")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
-
